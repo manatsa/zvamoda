@@ -37,7 +37,7 @@ public class AppUtil {
     public static String LOGGED_IN = "LOGGED_IN";
     public static String USERNAME = "USERNAME";
     public static String PASSWORD = "PASSWORD";
-    public static String BASE_URL = "http://db.zvandiri.org:8080/zvandiri-mobile/rest/mobile";
+    public static String BASE_URL = "https://db.zvandiri.org:8443/zvandiri-mobile/rest/mobile";
     public static String NAME = "NAME";
     public static String ID = "ID";
     public static String DETAILS_ID = "DETAILS_ID";
