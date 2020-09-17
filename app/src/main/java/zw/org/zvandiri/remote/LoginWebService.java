@@ -70,7 +70,7 @@ public class LoginWebService extends AsyncTask<String, Integer, String>{
                 f.save();
                 Log.d("saved facility", f.name);
             } else {
-                msg = "User Name or Password Incorrect";
+                msg = "Login Failed! Check credentials and internet connection, then try again.";
             }
         } catch (Exception e) {
             msg = "Login Failed Try Again";
