@@ -1,0 +1,34 @@
+{
+  "expo": {
+    "name": "zvamoda",
+    "slug": "zvamoda",
+    "version": "1.0.2",
+    "orientation": "default",
+    "icon": "./assets/applogo.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E6E6FA"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "requireFullScreen": true,
+      "bundleIdentifier": "zw.org.zvandiri.zvamoda"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/applogo.png",
+        "backgroundColor": "#E6E6FA"
+      },
+      "package": "zw.org.zvandiri.zvamoda",
+      "versionCode": 3
+    },
+    "web": {
+      "favicon": "./assets/applogo.png"
+    }
+  }
+}
