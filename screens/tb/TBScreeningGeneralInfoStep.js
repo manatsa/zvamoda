@@ -13,6 +13,7 @@ import TbSymptoms from "../../models/TbSymptoms";
 import { useNavigation } from "@react-navigation/native";
 import SavePatientTBScreening from "../patient/SaveTBTPTScreening";
 import { Text } from "react-native-paper";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function TBScreeningGeneralInfoStep({
   initValues,
@@ -50,10 +51,11 @@ export default function TBScreeningGeneralInfoStep({
   };
 
   const decideNextStep = async (values, form) => {
-    if (screened === "1" || onTreat === "0") {
-      submitEarly(values, form);
-    } else {
+    //console.log("values::", values);
+    if (screened === "0" && (onTreat !== "0" || identified !== "0")) {
       onNextStep(values);
+    } else {
+      submitEarly(values, form);
     }
   };
   return (
@@ -72,9 +74,14 @@ export default function TBScreeningGeneralInfoStep({
 
       {screened === "0" && (
         <>
-          <AppDateComponent
+          {/* <AppDateComponent
             label={"Date Screened"}
             name={"dateScreened"}
+            color={Colors.primary}
+          /> */}
+          <AppDatePicker
+            name={"dateScreened"}
+            label={"Date Screened"}
             color={Colors.primary}
           />
 
@@ -120,12 +127,20 @@ export default function TBScreeningGeneralInfoStep({
               />
               {screened === "0" && identified === "0" && onTreat === "0" && (
                 <>
-                  <AppDateComponent
+                  {/* <AppDateComponent
+                    name={"dateStartedTreatment"}
+                    label={"Date Started Treatment"}
+                  /> */}
+                  <AppDatePicker
                     name={"dateStartedTreatment"}
                     label={"Date Started Treatment"}
                   />
 
-                  <AppDateComponent
+                  {/* <AppDateComponent
+                    name={"dateCompletedTreatment"}
+                    label={"Date Completed Treatment"}
+                  /> */}
+                  <AppDatePicker
                     name={"dateCompletedTreatment"}
                     label={"Date Completed Treatment"}
                   />
@@ -137,10 +152,10 @@ export default function TBScreeningGeneralInfoStep({
       )}
 
       <View style={styles.buttonContainer}>
-        {(screened === "1" || onTreat === "0") && (
+        {(screened === "1" || (onTreat === "0" && identified === "0")) && (
           <AppSubmitButtonSmall title={"Save"} />
         )}
-        {screened === "0" && onTreat !== "0" && (
+        {screened === "0" && (onTreat !== "0" || identified !== "0") && (
           <AppSubmitButtonSmall title={"Next"} />
         )}
       </View>

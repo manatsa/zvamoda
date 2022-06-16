@@ -8,9 +8,16 @@ export default async function SynchronizeVLCD4s(token) {
   const vlsSegment = "/patient/add-vlcd4s";
   const vls = await AsyncStorage.getItem(StorageKeys.vls);
   let code = null;
+
   if (vls) {
-    const response = await PostToApi(token, vlsSegment, vls);
-    code = response?.code;
+    const response = await PostToApi(token, vlsSegment, vls, "VL/CD4").catch(
+      (error) => {
+        console.log(error.toJSON());
+        Alert.alert("VL/CD4 SYNCH ERROR", error.toJSON().message);
+      }
+    );
+
+    code = response?.status;
     if (code === 200) {
       await AsyncStorage.removeItem(StorageKeys.vls);
     }

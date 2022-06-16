@@ -67,7 +67,7 @@ function MainStackNavigation() {
           style={styles.dialog}
         >
           <Dialog.Content>
-            <Text style={styles.dialogHeader}>Zvamoda Mobile App v.1.0.0</Text>
+            <Text style={styles.dialogHeader}>Zvamoda Mobile App v.1.0.3</Text>
             <List.Item
               onPress={() => {
                 setVisible(false);
@@ -246,11 +246,22 @@ function MainStackNavigation() {
                       const connectivity = await AppNetworkInfo();
                       const { isConnected, isInternetReachable } = connectivity;
                       if (isConnected && !isInternetReachable) {
-                        Alert.alert(
-                          "Network Status",
-                          "You're  connected but internet accessibility cannot be guaranteed!."
+                        // Alert.alert(
+                        //   "Network Status",
+                        //   "You're  connected but internet accessibility cannot be guaranteed!."
+                        // );
+                        toast.show(
+                          "You're  connected but internet accessibility cannot be guaranteed!.",
+                          {
+                            type: "warning",
+                            duration: 5000,
+                            animationDuration: 1000,
+                            animationType: "zoom-in",
+                            placement: "bottom",
+                          }
                         );
-                      } else if (isConnected && isInternetReachable) {
+                      }
+                      if (isConnected) {
                         try {
                           const user = await AsyncStorage.getItem(
                             StorageKeys.currentUserKey
@@ -265,7 +276,7 @@ function MainStackNavigation() {
                             } else {
                               Alert.alert(
                                 "Synchronization Status",
-                                "Global Synchronization failed! \n Check the summary to see what is yet to be synchronized."
+                                "Global Synchronization finished with errors! \n Check the summary to see what has failed to synchronize."
                               );
                             }
                           } else {

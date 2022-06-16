@@ -9,8 +9,16 @@ export default async function SynchronizeReferrals(token) {
   const refs = await AsyncStorage.getItem(StorageKeys.referrals);
   let code = null;
   if (refs) {
-    const response = await PostToApi(token, refSegment, refs);
-    code = response?.code;
+    const response = await PostToApi(
+      token,
+      refSegment,
+      refs,
+      "REFERRALS"
+    ).catch((error) => {
+      console.log(error.toJSON());
+      Alert.alert("REFRRALS SYNCH ERROR", error.toJSON().message);
+    });
+    code = response?.status;
     if (code === 200) {
       await AsyncStorage.removeItem(StorageKeys.referrals);
     }

@@ -9,9 +9,35 @@ export default async function SynchronizeClients(token) {
   const clients = await AsyncStorage.getItem(StorageKeys.newPatientsKey);
   let code = null;
   if (clients) {
-    const response = await PostToApi(token, clientSegment, clients);
-    code = response?.code;
+    const response = await PostToApi(
+      token,
+      clientSegment,
+      clients,
+      "CLIENTS"
+    ).catch((error) => {
+      //console.log(error.toJSON());
+      Alert.alert("CLIENTS SYNCH ERROR", error.toJSON().message);
+    });
+    code = response?.status;
+    const data = response?.data;
+    //console.log("\n\n\n Response Code::", code, "\n Data ::", data);
     if (code === 200) {
+      // const newPatients = JSON.parse(data);
+      const allClientsString = await AsyncStorage.getItem(
+        StorageKeys.patientListKey
+      );
+      if (data && data?.length > 0 && allClientsString) {
+        const allClients = JSON.parse(allClientsString);
+        data?.forEach((p) => {
+          allClients.push(p);
+        });
+
+        await AsyncStorage.setItem(
+          StorageKeys.patientListKey,
+          JSON.stringify(allClients)
+        );
+      }
+
       await AsyncStorage.removeItem(StorageKeys.newPatientsKey);
     }
   } else {

@@ -57,7 +57,7 @@ export default function NewClientScreen({ navigation }) {
     try {
       await SaveNewClient(values, navigation);
       new Promise((resolve) => setTimeout(() => {}, 3000));
-      console.log(mergedValues);
+      //console.log(mergedValues);
     } finally {
       setWorking(false);
     }

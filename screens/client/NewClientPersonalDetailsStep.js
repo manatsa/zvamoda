@@ -11,6 +11,7 @@ import PatientStatus from "../../models/PatientStatus";
 import Gender from "../../models/Gender";
 import ClientType from "../../models/ClientType";
 import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewClientPersonalDetailsStep({
   initValues,
@@ -108,7 +109,8 @@ export default function NewClientPersonalDetailsStep({
             name="gender"
           />
 
-          <AppDateComponent name={"dateOfBirth"} label={"Date of Birth"} />
+          {/* <AppDateComponent name={"dateOfBirth"} label={"Date of Birth"} /> */}
+          <AppDatePicker name={"dateOfBirth"} label={"Date of Birth"} />
 
           <AppFormField
             name="oINumber"

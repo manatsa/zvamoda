@@ -2,6 +2,7 @@ import {
   Alert,
   Easing,
   FlatList,
+  ScrollView,
   StyleSheet,
   TouchableHighlight,
   View,
@@ -20,6 +21,8 @@ import FIcon from "react-native-vector-icons/FontAwesome";
 import SynchronizeContacts from "../../storage/SynchronizeContacts";
 import {
   ActivityIndicator,
+  Button,
+  IconButton,
   Modal,
   Portal,
   Provider,
@@ -28,14 +31,21 @@ import {
 import { useToast } from "react-native-toast-notifications";
 import AppNetworkInfo from "../../utils/AppNetworkInfo";
 import AppFlipYScreenCenter from "../../components/animatedContainers/AppFlipYScreenCenter";
+import YesNo from "../../models/YesNo";
+import Position from "../../models/Position";
+import { Col, Grid, Row } from "react-native-easy-grid";
 
 export default function ContactListScreen() {
   const [patient, setPatient] = useState(null);
   const [contacts, setContacts] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [item, setItem] = useState(null);
   const toast = useToast();
   const [visible, setVisible] = useState(false);
+  const [positions, setPositions] = useState([]);
+  const [locations, setLocations] = useState([]);
+  const [facilities, setFacilities] = useState([]);
 
   const getData = async () => {
     const patientString = await AsyncStorage.getItem(StorageKeys.patient);
@@ -51,6 +61,20 @@ export default function ContactListScreen() {
       conts = c;
     }
     setContacts(conts);
+
+    const posString = await Position();
+    let po = JSON.parse(posString);
+    setPositions(po);
+
+    const locString = await Position();
+    let lo = JSON.parse(locString);
+    setLocations(lo);
+
+    const facilitiesString = await AsyncStorage.getItem(
+      StorageKeys.facilitiesKey
+    );
+    const fcs = JSON.parse(facilitiesString);
+    setFacilities(fcs);
   };
 
   useEffect(() => {
@@ -78,17 +102,29 @@ export default function ContactListScreen() {
               const connectivity = await AppNetworkInfo();
               const { isConnected, isInternetReachable } = connectivity;
               if (isConnected && !isInternetReachable) {
-                Alert.alert(
-                  "Network Status",
-                  "You're  connected but internet accessibility cannot be guaranteed!."
+                // Alert.alert(
+                //   "Network Status",
+                //   "You're  connected but internet accessibility cannot be guaranteed!."
+                // );
+                toast.show(
+                  "You're  connected but internet accessibility cannot be guaranteed!.",
+                  {
+                    type: "warning",
+                    duration: 5000,
+                    animationDuration: 1000,
+                    animationType: "zoom-in",
+                    placement: "bottom",
+                  }
                 );
-              } else if (isConnected && isInternetReachable) {
+              }
+              if (isConnected) {
                 try {
                   const token = await AsyncStorage.getItem(
                     StorageKeys.tokenKey
                   );
                   const code = await SynchronizeContacts(token);
-                  if (code === 200) {
+                  if (!code) {
+                  } else if (code === 200) {
                     Alert.alert("Contacts synchronization was successful!");
                   } else if (code < 0) {
                     Alert.alert("No contacts to synchronize!");
@@ -156,12 +192,223 @@ export default function ContactListScreen() {
             <Modal
               visible={showModal}
               dismissable={true}
-              contentContainerStyle={styles.modalContainer}
+              contentContainerStyle={[
+                styles.modalContainer,
+                {
+                  borderWidth: 5,
+                  borderColor: Colors.secondary,
+                  elevation: 30,
+                },
+              ]}
               onDismiss={() => setShowModal(false)}
             >
-              <Text>
-                Will show details of the clicked message. Yet to be impmented!
-              </Text>
+              <ScrollView>
+                <Grid>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"First Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.firstName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow]}>
+                    <Col>
+                      <AppText>{"Last Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.lastName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Primary Clinic"}</AppText>
+                    </Col>
+
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (facilities?.find((f) => f?.id == patient?.facilityID)
+                            ?.name || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Contact Date"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.contactDate
+                            ? new Date(item?.contactDate)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Last Appointment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.lastClinicAppointmentDate
+                            ? new Date(item?.lastClinicAppointmentDate)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Next Appointment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.nextClinicAppointmentDate
+                            ? new Date(item?.nextClinicAppointmentDate)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Attended Appointment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.attendedClinicAppointment)]
+                            ?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Contacted By"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (item?.contactMadeBy || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Position"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (positions.find((p) => p.id === item?.position)
+                            ?.name || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow, { paddingTop: 20 }]}>
+                    <Col>
+                      <IconButton
+                        icon={"delete"}
+                        animated={true}
+                        //background={Colors.danger}
+                        color={Colors.danger}
+                        size={20}
+                        style={{
+                          borderColor: Colors.danger,
+                          borderWidth: 1.5,
+                        }}
+                        onPress={() => {
+                          Alert.alert(
+                            `Delete ${patient?.firstName} ${patient?.lastName}'s contact`,
+                            "Are you sure you want to delete this contact?",
+                            [
+                              {
+                                text: "No",
+                                style: "cancel",
+                                onPress: () => null,
+                              },
+                              {
+                                text: "Delete",
+                                style: "default",
+                                onPress: async () => {
+                                  if (item) {
+                                    const newContacts = contacts.filter(
+                                      (c) =>
+                                        JSON.stringify(c) !==
+                                        JSON.stringify(item)
+                                    );
+                                    //console.log(newContacts);
+                                    await AsyncStorage.setItem(
+                                      StorageKeys.contacts,
+                                      JSON.stringify(newContacts)
+                                    );
+                                    Alert.alert(
+                                      "DELETE ACTION",
+                                      "Item deleted Successfully!"
+                                    );
+                                    setShowModal(false);
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Button
+                        color={Colors.primary}
+                        icon={"close"}
+                        mode="outlined"
+                        style={{ maxWidth: 120, elevation: 20 }}
+                        onPress={() => setShowModal(false)}
+                      >
+                        Close
+                      </Button>
+                    </Col>
+                  </Row>
+                </Grid>
+              </ScrollView>
             </Modal>
           </Portal>
         </Provider>
@@ -172,7 +419,12 @@ export default function ContactListScreen() {
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => {
             return (
-              <TouchableHighlight onPress={() => setShowModal(true)}>
+              <TouchableHighlight
+                onPress={() => {
+                  setShowModal(true);
+                  setItem(item);
+                }}
+              >
                 <View style={styles.listItemContainer}>
                   <ContactListItem
                     contact={item}
@@ -251,9 +503,17 @@ const styles = StyleSheet.create({
   modalContainer: {
     backgroundColor: Colors.light,
     zIndex: 10,
-    minHeight: "20%",
-    width: "90%",
+    minHeight: "90%",
+    maxHeight: "95%",
+    width: "95%",
     justifyContent: "center",
     alignSelf: "center",
+    paddingVertical: 10,
+    paddingHorizontal: 5,
+    zIndex: 1000,
+  },
+  modalRow: {
+    paddingVertical: 5,
+    // borderBottomWidth: 0.2,
   },
 });

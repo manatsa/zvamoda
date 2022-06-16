@@ -1,5 +1,6 @@
 import * as yup from "yup";
 
+const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 export default [
   yup.object({
     contactDate: yup
@@ -7,8 +8,13 @@ export default [
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
-      .max(new Date(), "Date must be today or  in the past.")
-      .required("Please select date of contact"),
+      .max(tomorrow, "Date must be today or  in the past.")
+      .required("Please select date of contact.")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
     location: yup.string().required("Please specify contact location"),
     contactPhoneOption: yup
       .string()
@@ -25,7 +31,14 @@ export default [
     numberOfSms: yup.string().when(["location", "phoneContactOption"], {
       is: (loc, phoneOption) =>
         loc === "96b65c7e-b03d-4f2d-8b18-cc3aeb3091db" && phoneOption === "1",
-      then: yup.string().required("How many SMSes?"),
+      then: yup
+        .number()
+        .required("How many SMSes?")
+        .test(
+          "invalid-smses",
+          "Invalid number of SMSes.",
+          (val) => val && +val >= 1
+        ),
     }),
     supportGroupTheme: yup.string().when("location", {
       is: (loc) =>
@@ -44,14 +57,24 @@ export default [
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
-      .max(new Date(), "Date must be in the past!")
-      .required("Enter last clinic appointment date."),
+      .max(tomorrow, "Date must be in the past!")
+      .required("Enter last clinic appointment date.")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
     nextClinicAppointmentDate: yup
       .date()
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
-      .required("Enter next clinic appointment date."),
+      .required("Enter next clinic appointment date.")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
     attendedClinicAppointment: yup
       .string()
       .required("Please specify if attended last appointment."),

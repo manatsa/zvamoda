@@ -23,7 +23,7 @@ import AppText from "../components/wrappers/AppText";
 import SynchronizeEntries from "../storage/SynchronizeEntries";
 import AppNetworkInfo from "../utils/AppNetworkInfo";
 import * as Animatable from "react-native-animatable";
-import AppRotateScreenCenter from "../components/animatedContainers/AppRotateScreenCenter";
+import DatePickerExample from "./DatePickerExample";
 
 function WelcomeScreen({ navigation }) {
   const [isLoading, setIsLoading] = useState(false);
@@ -116,11 +116,22 @@ function WelcomeScreen({ navigation }) {
     const connectivity = await AppNetworkInfo();
     const { isConnected, isInternetReachable } = connectivity;
     if (isConnected && !isInternetReachable) {
-      Alert.alert(
-        "Network Status",
-        "You're  connected but internet accessibility cannot be guaranteed!."
+      // Alert.alert(
+      //   "Network Status",
+      //   "You're  connected but internet accessibility cannot be guaranteed!."
+      // );
+      toast.show(
+        "You're  connected but internet accessibility cannot be guaranteed!.",
+        {
+          type: "warning",
+          duration: 5000,
+          animationDuration: 1000,
+          animationType: "zoom-in",
+          placement: "bottom",
+        }
       );
-    } else if (isConnected && isInternetReachable) {
+    }
+    if (isConnected) {
       try {
         const user = await AsyncStorage.getItem(StorageKeys.userKey);
         if (user) {
@@ -241,7 +252,6 @@ function WelcomeScreen({ navigation }) {
   }, [start]);
 
   return (
-    // <AppRotateScreenCenter>
     <ImageBackground
       source={require("../assets/background.jpg")}
       style={styles.background}
@@ -269,7 +279,7 @@ function WelcomeScreen({ navigation }) {
         </Animatable.Text>
       </Animated.View>
 
-      {/* <AppNumberInput /> */}
+      {/* {<DatePickerExample />} */}
       {isSyncing && (
         <View style={styles.activityIndicatorContainer}>
           <ActivityIndicator

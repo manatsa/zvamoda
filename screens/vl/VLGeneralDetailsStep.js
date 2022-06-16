@@ -6,7 +6,7 @@ import TestType from "../../models/TestType";
 import AppFormRadio from "../../components/form/AppFormRadio";
 import AppFormPicker from "../../components/form/AppFormPicker";
 import AppSubmitButtonSmall from "../../components/form/AppSubmitButtonSmall";
-import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function VLGeneralDetailsStep({
   initValues,
@@ -20,7 +20,8 @@ export default function VLGeneralDetailsStep({
       validationSchema={validationSchema}
       onSubmit={onNextStep}
     >
-      <AppDateComponent name={"dateTaken"} label={"Date  Taken"} />
+      {/* <AppDateComponent name={"dateTaken"} label={"Date  Taken"} /> */}
+      <AppDatePicker name={"dateTaken"} label={"Date Taken"} />
 
       <AppFormPicker
         name={"testType"}
@@ -35,7 +36,8 @@ export default function VLGeneralDetailsStep({
         row={"column"}
       />
 
-      <AppDateComponent name={"nextTestDate"} label={"Next Test Date"} />
+      {/* <AppDateComponent name={"nextTestDate"} label={"Next Test Date"} />
+      <AppDatePicker name={"nextTestDate"} label={"Next Test Date"} /> */}
 
       <View style={styles.buttonContainer}>
         <AppSubmitButtonSmall title={"Next"} />

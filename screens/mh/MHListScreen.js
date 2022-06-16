@@ -2,6 +2,7 @@ import {
   Alert,
   Easing,
   FlatList,
+  ScrollView,
   StyleSheet,
   TouchableHighlight,
   View,
@@ -18,6 +19,8 @@ import MIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import FIcon from "react-native-vector-icons/FontAwesome";
 import {
   ActivityIndicator,
+  Button,
+  IconButton,
   Modal,
   Portal,
   Provider,
@@ -28,6 +31,10 @@ import AppNetworkInfo from "../../utils/AppNetworkInfo";
 import MHListItem from "./MHListItem";
 import SynchronizeMHScreening from "../../storage/SynchronizeMHScreening";
 import AppFlipYScreenCenter from "../../components/animatedContainers/AppFlipYScreenCenter";
+import YesNo from "../../models/YesNo";
+import { Col, Grid, Row } from "react-native-easy-grid";
+import IdentifiedRisks from "../../models/IdentifiedRisks";
+import Supports from "../../models/Supports";
 
 export default function ReferralListScreen() {
   const [patient, setPatient] = useState(null);
@@ -36,6 +43,8 @@ export default function ReferralListScreen() {
   const [showModal, setShowModal] = useState(false);
   const toast = useToast();
   const [visible, setVisible] = useState(false);
+  const [facilities, setFacilities] = useState([]);
+  const [item, setItem] = useState();
 
   const getData = async () => {
     const patientString = await AsyncStorage.getItem(StorageKeys.patient);
@@ -51,6 +60,12 @@ export default function ReferralListScreen() {
       mhs = r;
     }
     setMHs(mhs);
+
+    const facilitiesString = await AsyncStorage.getItem(
+      StorageKeys.facilitiesKey
+    );
+    const fcs = JSON.parse(facilitiesString);
+    setFacilities(fcs);
   };
 
   useEffect(() => {
@@ -78,18 +93,30 @@ export default function ReferralListScreen() {
               const connectivity = await AppNetworkInfo();
               const { isConnected, isInternetReachable } = connectivity;
               if (isConnected && !isInternetReachable) {
-                Alert.alert(
-                  "Network Status",
-                  "You're  connected but internet accessibility cannot be guaranteed!."
+                // Alert.alert(
+                //   "Network Status",
+                //   "You're  connected but internet accessibility cannot be guaranteed!."
+                // );
+                toast.show(
+                  "You're  connected but internet accessibility cannot be guaranteed!.",
+                  {
+                    type: "warning",
+                    duration: 5000,
+                    animationDuration: 1000,
+                    animationType: "zoom-in",
+                    placement: "bottom",
+                  }
                 );
-              } else if (isConnected && isInternetReachable) {
+              }
+              if (isConnected) {
                 try {
                   const token = await AsyncStorage.getItem(
                     StorageKeys.tokenKey
                   );
 
                   const code = await SynchronizeMHScreening(token);
-                  if (code === 200) {
+                  if (!code) {
+                  } else if (code === 200) {
                     Alert.alert(
                       "MH Screenings synchronization was successful!"
                     );
@@ -164,12 +191,219 @@ export default function ReferralListScreen() {
             <Modal
               visible={showModal}
               dismissable={true}
-              contentContainerStyle={styles.modalContainer}
+              contentContainerStyle={[
+                styles.modalContainer,
+                {
+                  borderWidth: 5,
+                  borderColor: Colors.secondary,
+                  elevation: 30,
+                },
+              ]}
               onDismiss={() => setShowModal(false)}
             >
-              <Text>
-                Will show details of the clicked message. Yet to be impmented!
-              </Text>
+              <ScrollView>
+                <Grid>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"First Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.firstName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow]}>
+                    <Col>
+                      <AppText>{"Last Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.lastName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Primary Clinic"}</AppText>
+                    </Col>
+
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (facilities?.find((f) => f?.id == patient?.facilityID)
+                            ?.name || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Screening Date"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateScreened
+                            ? new Date(item?.dateScreened)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"At Risk"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + YesNo[String(item?.risk)]?.label}</Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Risks"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.identifiedRisks?.map(
+                            (r) => IdentifiedRisks[String(r)]?.label
+                          ) || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Support"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " + (YesNo[String(item?.support)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Support From"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.supports?.map(
+                            (p) =>
+                              Supports.find((s) => {
+                                return s.value === p;
+                              })?.label
+                          ) || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Referred"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " + (YesNo[String(item?.referral)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+
+                  <Row style={[styles.modalRow, { paddingTop: 20 }]}>
+                    <Col>
+                      <IconButton
+                        icon={"delete"}
+                        animated={true}
+                        //background={Colors.danger}
+                        color={Colors.danger}
+                        size={20}
+                        style={{
+                          borderColor: Colors.danger,
+                          borderWidth: 1.5,
+                        }}
+                        onPress={() => {
+                          Alert.alert(
+                            `Delete ${patient?.firstName} ${patient?.lastName}'s MH Item`,
+                            "Are you sure you want to delete this MH item?",
+                            [
+                              {
+                                text: "No",
+                                style: "cancel",
+                                onPress: () => null,
+                              },
+                              {
+                                text: "Delete",
+                                style: "default",
+                                onPress: async () => {
+                                  if (item) {
+                                    const newMHs = mhs.filter(
+                                      (m) =>
+                                        JSON.stringify(m) !==
+                                        JSON.stringify(item)
+                                    );
+                                    console.log(newMHs);
+                                    await AsyncStorage.setItem(
+                                      StorageKeys.mhScreeningKey,
+                                      JSON.stringify(newMHs)
+                                    );
+                                    Alert.alert(
+                                      "DELETE ACTION",
+                                      "Item deleted Successfully!"
+                                    );
+                                    setShowModal(false);
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Button
+                        color={Colors.primary}
+                        icon={"close"}
+                        mode="outlined"
+                        style={{ maxWidth: 120, elevation: 20 }}
+                        onPress={() => setShowModal(false)}
+                      >
+                        Close
+                      </Button>
+                    </Col>
+                  </Row>
+                </Grid>
+              </ScrollView>
             </Modal>
           </Portal>
         </Provider>
@@ -180,7 +414,12 @@ export default function ReferralListScreen() {
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => {
             return (
-              <TouchableHighlight onPress={() => setShowModal(true)}>
+              <TouchableHighlight
+                onPress={() => {
+                  setShowModal(true);
+                  setItem(item);
+                }}
+              >
                 <View style={styles.listItemContainer}>
                   <MHListItem mhScreening={item} index={index} />
                 </View>

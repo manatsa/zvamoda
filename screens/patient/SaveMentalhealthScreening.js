@@ -8,7 +8,6 @@ export default async function SavePatientMHScreening(
   navigation
 ) {
   let { dateScreened } = values;
-  Alert.alert("Date Screened", dateScreened);
   let current = await AsyncStorage.getItem(StorageKeys.mhScreeningKey);
   let mhs = [];
   if (current) {
@@ -20,14 +19,22 @@ export default async function SavePatientMHScreening(
     ...{ patient: patient.id },
   };
 
-  mhs.push(newValues);
-  const mergedMHString = JSON.stringify(mhs);
-  if (mergedMHString) {
-    await AsyncStorage.setItem(StorageKeys.mhScreeningKey, mergedMHString);
-    Alert.alert("Mental health screening item saved successfully");
+  if (newValues.patient && newValues.patient.length > 0) {
+    mhs.push(newValues);
+    const mergedMHString = JSON.stringify(mhs);
+    if (mergedMHString) {
+      await AsyncStorage.setItem(StorageKeys.mhScreeningKey, mergedMHString);
+      Alert.alert("Mental health screening item saved successfully");
+    } else {
+      console.log("Nothing to save");
+    }
   } else {
-    console.log("Nothing to save");
+    Alert.alert(
+      "ERROR SAVING ITEM",
+      "MH Screening item could not be saved.\n Please enter the item again."
+    );
   }
+
   navigation.navigate("MHList");
 }
 

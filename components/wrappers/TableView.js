@@ -15,8 +15,10 @@ import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import AppPicker from "./AppPicker";
 import Colors from "../../config/Colors";
 import AppText from "./AppText";
-import { jsonToCSV } from "react-native-csv";
-import Communications from "react-native-communications";
+import XLSX from "xlsx";
+import * as FileSystem from "expo-file-system";
+import * as Sharing from "expo-sharing";
+// import RNFS from "react-native-fs";
 
 export default function TableView({
   title = "Data Table",
@@ -40,67 +42,62 @@ export default function TableView({
   setProgress,
   exportable,
 }) {
-  const jsonData = `[
-    {
-        "Column 1": "1-1",
-        "Column 2": "1-2",
-        "Column 3": "1-3",
-        "Column 4": "1-4"
-    },
-    {
-        "Column 1": "2-1",
-        "Column 2": "2-2",
-        "Column 3": "2-3",
-        "Column 4": "2-4"
-    },
-    {
-        "Column 1": "3-1",
-        "Column 2": "3-2",
-        "Column 3": "3-3",
-        "Column 4": "3-4"
-    },
-    {
-        "Column 1": 4,
-        "Column 2": 5,
-        "Column 3": 6,
-        "Column 4": 7
-    }
-  ]`;
-
+  const filename = `/ExportedStats-${new Date().toISOString().slice(0, 10)}-${
+    new Date().getHours
+  }-${new Date().getMinutes()}-${new Date().getSeconds()}-.xlsx`;
   const createAndSaveCSV = async () => {
-    // const results = jsonToCSV(data);
-    // const response = await SendEmail(
-    //   "manatsa@zvandiri.org",
-    //   "Test Email",
-    //   results,
-    //   {}
-    // );
+    try {
+      var ws = XLSX.utils.json_to_sheet(data);
+      var wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Cities");
+      const wbout = XLSX.write(wb, {
+        type: "base64",
+        bookType: "xlsx",
+      });
 
-    // console.log(response);
-    Communications.email(
-      ["manatsa@zvandiri.org", "manatsachinyeruse@gmail.com"], // destination emails
-      null, //  CC email
-      null, //  bcc
-      "Enter Subject", //<--- Subject
-      "Enter body for the mail" //<--- Body Text
-    );
+      const uri = FileSystem.cacheDirectory + ".xlsx";
+      //console.log(`Writing to ${JSON.stringify(uri)} with text: ${wbout}`);
+      await FileSystem.writeAsStringAsync(uri, wbout, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
 
-    Alert.alert("Your message was successfully sent!");
-    // SendEmail(
-    //   "manatsa@zvandiri.org",
-    //   "We need your feedback",
-    //   "UserName, we need 2 minutes of your time to fill this quick survey [link]",
-    //   {}
-    //   //{ cc: "user@domain.com; user2@domain.com; userx@domain1.com" }
-    // ).then(() => {
-    //   Alert.alert("Your message was successfully sent!");
-    //   console.log("Your message was successfully sent!");
-    // });
+      if (!Sharing.isAvailableAsync) {
+        Alert.alert(
+          "Feature Not Found",
+          "Expo Sharing not available in this app!"
+        );
+      } else {
+        Alert.alert("Feature  Found", "Expo Sharing  available in this app!");
+      }
+      await Sharing.shareAsync(uri, {
+        mimeType:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        dialogTitle: "MyWater data",
+        UTI: "com.microsoft.excel.xlsx",
+      });
+
+      // Write generated excel to Storage
+      // RNFS.writeFile(RNFS.ExternalStorageDirectoryPath + filename, wbout, "ascii")
+      //   .then((r) => {
+      //     console.log("Success");
+      //   })
+      //   .catch((e) => {
+      //     console.log("Error", e);
+      //   });
+    } catch (error) {
+      console.log(error);
+      Alert.alert("Download Error", String(error));
+    }
   };
 
+  //console.log(data);
   const formattedData = itemsPerPage
-    ? data?.slice(itemsPerPage * page, itemsPerPage * (page + 1))
-    : data;
+    ? data
+      ? data?.slice(itemsPerPage * page, itemsPerPage * (page + 1))
+      : []
+    : data
+    ? data
+    : [];
 
   return (
     <View>
@@ -217,13 +214,13 @@ export default function TableView({
             }}
           />
           <Text style={{ paddingHorizontal: 5 }}>{`${
-            data.length < 1 ? 0 : page * itemsPerPage + 1
+            data?.length < 1 ? 0 : page * itemsPerPage + 1
           } to ${
             (page + 1) * itemsPerPage === 0
-              ? data.length
-              : data.length > (page + 1) * itemsPerPage
+              ? data?.length
+              : data?.length > (page + 1) * itemsPerPage
               ? (page + 1) * itemsPerPage
-              : data.length
+              : data?.length
           } of ${data?.length}`}</Text>
 
           <TouchableOpacity
@@ -241,7 +238,7 @@ export default function TableView({
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
-              Math.floor(data.length / itemsPerPage) > page
+              Math.floor(data?.length / itemsPerPage) > page
                 ? setPage(++page)
                 : null;
             }}
@@ -261,7 +258,7 @@ export default function TableView({
               color={Colors.greenish}
               onPress={async () => {
                 setFetching(true);
-                createAndSaveCSV();
+                await createAndSaveCSV();
                 setFetching(false);
                 // onShare();
               }}

@@ -12,6 +12,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import StorageKeys from "../../utils/StorageKeys";
 import AppFormNumberInput from "../../components/form/AppFormNumberInput";
 import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewContactStepGeneralInfo({
   initValues,
@@ -60,7 +61,8 @@ export default function NewContactStepGeneralInfo({
       validationSchema={validationSchema}
       onSubmit={onNextStep}
     >
-      <AppDateComponent label={"Date of Contact"} name={"contactDate"} />
+      {/* <AppDateComponent label={"Date of Contact"} name={"contactDate"} /> */}
+      <AppDatePicker name={"contactDate"} label={"Date of Contact"} />
       <AppFormPicker
         icon={"none"}
         items={filteredLocations || []}
@@ -114,13 +116,21 @@ export default function NewContactStepGeneralInfo({
         label={"New Stataus After Assessment"}
         name="careLevelAfterAssessment"
       />
-      <AppDateComponent
+      {/* <AppDateComponent
         label={"Last Appointment Date"}
         name="lastClinicAppointmentDate"
+      /> */}
+      <AppDatePicker
+        name={"lastClinicAppointmentDate"}
+        label={"Last Appointment Date"}
       />
-      <AppDateComponent
+      {/* <AppDateComponent
         label={"Next Appointment Date"}
         name="nextClinicAppointmentDate"
+      /> */}
+      <AppDatePicker
+        name={"nextClinicAppointmentDate"}
+        label={"Next Appointment Date"}
       />
       <AppFormPicker
         icon={"none"}

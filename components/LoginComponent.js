@@ -9,6 +9,7 @@ import StorageKeys from "../utils/StorageKeys";
 import GetFromApi from "../api/GetAxiosClient";
 import LoginToApi from "../api/LoginToApi";
 import PersistCache from "../storage/PersistStorage";
+import { AxiosError } from "axios";
 
 function LoginComponent({ navigation }) {
   const [isLoading, setLoading] = useState(false);
@@ -22,40 +23,37 @@ function LoginComponent({ navigation }) {
   const appHandleSubmit = async (values) => {
     setLoading(true);
     try {
-      const token = await LoginToApi(
+      const response = await LoginToApi(
         { username: values.username, password: values.password },
         login
+      );
+
+      const token = response?.data;
+
+      if (!token || token.length === 0) {
+        return;
+      }
+      await AsyncStorage.setItem(StorageKeys.tokenKey, token);
+
+      const listResponse = await GetFromApi(
+        token,
+        segment + values?.username
       ).catch((error) => {
-        Alert.alert(
-          "LOGIN ERROR",
-          error?.response?.status
-            ? "Username or Password is incorrect!"
-            : String(error)
-        );
+        Alert.alert("ERROR Fetching Data", error?.toJSON()?.message);
       });
-      if (token && token.length > 0) {
-        await AsyncStorage.setItem(StorageKeys.tokenKey, token);
 
-        const itemsList = await GetFromApi(
-          token,
-          segment + values?.username
-        ).catch((error) => {
-          Alert.alert("ERROR Fecting Data", String(error));
+      if (listResponse?.status === 200) {
+        await PersistCache(listResponse?.data, {
+          username: values.username,
+          password: values.password,
+        }).catch((error) => {
+          Alert.alert("Data Storage Error", String(error));
         });
-
-        if (itemsList?.patients) {
-          await PersistCache(itemsList, {
-            username: values.username,
-            password: values.password,
-          }).catch((error) => {
-            Alert.alert("Data Storage Error", String(error));
-          });
-          navigation.navigate("patients", {
-            patients: itemsList?.patients,
-          });
-        } else {
-          Alert.alert("Error While Synchronizing", String(error));
-        }
+        navigation.navigate("patients", {
+          patients: listResponse?.data?.patients,
+        });
+      } else {
+        Alert.alert("Error While Synchronizing", listResponse?.statusText);
       }
     } finally {
       setLoading(false);

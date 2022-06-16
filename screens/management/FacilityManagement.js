@@ -3,9 +3,7 @@ import React, { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import StorageKeys from "../../utils/StorageKeys";
 import { AppForm, AppSubmitButton } from "../../components/form";
-import AppDateComponent from "../../components/wrappers/AppDateComponent";
 import * as yup from "yup";
-import AppFlipYScreenCenter from "../../components/animatedContainers/AppFlipYScrollViewScreen";
 import {
   ActivityIndicator,
   DataTable,
@@ -19,6 +17,7 @@ import GetFromApi from "../../api/GetAxiosClient";
 import TableView from "../../components/wrappers/TableView";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import AppFlipYScrollViewScreen from "../../components/animatedContainers/AppFlipYScrollViewScreen";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 const optionsPerPage = [3, 5, 10, 20, 50, 100];
 export default function FacilityManagement({ route, navigation }) {
@@ -67,20 +66,25 @@ export default function FacilityManagement({ route, navigation }) {
 
   const onSubmit = async (values) => {
     const { start, end } = values;
-    const startFinal = new Date(String(start)).toISOString().slice(0, 10);
-    const endFinal = new Date(String(end)).toISOString().slice(0, 10);
+    const startFinal = new Date(String(start))?.toISOString()?.slice(0, 10);
+    const endFinal = new Date(String(end))?.toISOString()?.slice(0, 10);
     setShowForm(false);
     setFetching(true);
 
     try {
       if (facilityId && facilityId !== "") {
         const segment = `/patient/get-facility-statistics/?facilityID=${facilityId}&start=${startFinal}&end=${endFinal}`;
-        const facilityData = await GetFromApi(token, segment);
-        setFacilityData(facilityData);
+        const facilityData = await GetFromApi(token, segment).catch((error) => {
+          Alert.alert("ERROR FECTHING DATA", error.toJSON().message);
+        });
+        setFacilityData(facilityData?.data);
       } else {
         const segment = `/patient/get-district-statistics/?districtId=${user?.district?.id}&start=${startFinal}&end=${endFinal}`;
-        const districtData = await GetFromApi(token, segment);
-        setDistrictData(districtData);
+        const districtData = await GetFromApi(token, segment).catch((error) => {
+          Alert.alert("ERROR FECTHING DATA", error.toJSON().message);
+        });
+        //console.log(districtData.data);
+        setDistrictData(districtData?.data);
       }
     } finally {
       setFetching(false);
@@ -104,8 +108,10 @@ export default function FacilityManagement({ route, navigation }) {
         validationSchema={statsValidationSchema}
         onSubmit={onSubmit}
       >
-        <AppDateComponent name={"start"} label={"Start Date"} />
-        <AppDateComponent name={"end"} label={"Start Date"} />
+        {/* <AppDateComponent name={"start"} label={"Start Date"} /> */}
+        <AppDatePicker name={"start"} label={"Start Date"} />
+        {/* <AppDateComponent name={"end"} label={"Start Date"} /> */}
+        <AppDatePicker name={"end"} label={"End Date"} />
         <AppSubmitButton title={"Get Data"} />
       </AppForm>
     </AppFlipYScrollViewScreen>
@@ -142,14 +148,15 @@ export default function FacilityManagement({ route, navigation }) {
           <DataTable.Title numeric>Value</DataTable.Title>
         </DataTable.Header>
 
-        {Object.keys(facilityData).map((key, index) => {
-          return (
-            <DataTable.Row key={index}>
-              <DataTable.Cell>{key}</DataTable.Cell>
-              <DataTable.Cell numeric>{facilityData[key]}</DataTable.Cell>
-            </DataTable.Row>
-          );
-        })}
+        {facilityData &&
+          Object?.keys(facilityData).map((key, index) => {
+            return (
+              <DataTable.Row key={index}>
+                <DataTable.Cell>{key}</DataTable.Cell>
+                <DataTable.Cell numeric>{facilityData[key]}</DataTable.Cell>
+              </DataTable.Row>
+            );
+          })}
       </DataTable>
     </AppFlipYScrollViewScreen>
   ) : (
@@ -218,13 +225,13 @@ export default function FacilityManagement({ route, navigation }) {
         ]}
         title={"DISTRICT SUMMARY"}
         data={
-          searchQuery
+          (searchQuery
             ? districtData.filter((d) => {
                 return d.facility
                   .toLowerCase()
                   .includes(searchQuery.toLowerCase());
               })
-            : districtData
+            : districtData) || []
         }
         pageOptions={optionsPerPage}
         itemsPerPage={itemsPerPage}
@@ -237,9 +244,9 @@ export default function FacilityManagement({ route, navigation }) {
         highlightRows={true}
         highlightColumns={false}
         padding={true}
-        //exportable={true}
-        //setFetching={setFetching}
-        // setProgress={setProgress}
+        exportable={false}
+        setFetching={setFetching}
+        setProgress={setProgress}
       />
     </AppFlipYScrollViewScreen>
   );

@@ -23,8 +23,10 @@ function AppFormPicker({ icon, name, label, items, callback }) {
         icon={icon | "none"}
         items={items}
         onValueChange={(item) => {
+          setFieldValue(name, String(item));
           callback ? callback(item) : null;
-          setFieldValue(name, item);
+
+          //console.log("value::", values[name]);
         }}
         prompt={label}
         value={values[name]}

@@ -10,7 +10,7 @@ import StorageKeys from "../../utils/StorageKeys";
 import MaritalStatus from "../../models/MaritalStatus";
 import AppButtonSmall from "../../components/wrappers/AppButtonSmall";
 import OrphanageStatus from "../../models/OrphanageStatus";
-import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewClientGeneralDetailsStep({
   initValues,
@@ -99,7 +99,11 @@ export default function NewClientGeneralDetailsStep({
         placeholder={"art regimen"}
       />
 
-      <AppDateComponent
+      {/* <AppDateComponent
+        name={"dateStartedTreatment"}
+        label={"Date Started Treatment"}
+      /> */}
+      <AppDatePicker
         name={"dateStartedTreatment"}
         label={"Date Started Treatment"}
       />

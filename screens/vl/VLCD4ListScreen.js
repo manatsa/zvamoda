@@ -2,6 +2,7 @@ import {
   Alert,
   Easing,
   FlatList,
+  ScrollView,
   StyleSheet,
   TouchableHighlight,
   View,
@@ -18,6 +19,8 @@ import MIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import FIcon from "react-native-vector-icons/FontAwesome";
 import {
   ActivityIndicator,
+  Button,
+  IconButton,
   Modal,
   Portal,
   Provider,
@@ -28,6 +31,10 @@ import SynchronizeVLCD4s from "../../storage/SynchronizeVLCD4s";
 import VLCD4ListItem from "./VLCD4ListItem";
 import AppNetworkInfo from "../../utils/AppNetworkInfo";
 import AppFlipYScreenCenter from "../../components/animatedContainers/AppFlipYScreenCenter";
+import { Col, Grid, Row } from "react-native-easy-grid";
+import TestType from "../../models/TestType";
+import Cd4CountResultSource from "../../models/Cd4CountResultSource";
+import YesNo from "../../models/YesNo";
 
 export default function VLCD4ListScreen() {
   const [patient, setPatient] = useState(null);
@@ -36,6 +43,8 @@ export default function VLCD4ListScreen() {
   const [showModal, setShowModal] = useState(false);
   const toast = useToast();
   const [visible, setVisible] = useState(false);
+  const [item, setItem] = useState({});
+  const [facilities, setFacilities] = useState([]);
 
   const getData = async () => {
     const patientString = await AsyncStorage.getItem(StorageKeys.patient);
@@ -51,6 +60,11 @@ export default function VLCD4ListScreen() {
       vl = c;
     }
     setVls(vl);
+    const facilitiesString = await AsyncStorage.getItem(
+      StorageKeys.facilitiesKey
+    );
+    const fcs = JSON.parse(facilitiesString);
+    setFacilities(fcs);
   };
 
   useEffect(() => {
@@ -78,18 +92,30 @@ export default function VLCD4ListScreen() {
               const connectivity = await AppNetworkInfo();
               const { isConnected, isInternetReachable } = connectivity;
               if (isConnected && !isInternetReachable) {
-                Alert.alert(
-                  "Network Status",
-                  "You're  connected but internet accessibility cannot be guaranteed!."
+                // Alert.alert(
+                //   "Network Status",
+                //   "You're  connected but internet accessibility cannot be guaranteed!."
+                // );
+                toast.show(
+                  "You're  connected but internet accessibility cannot be guaranteed!.",
+                  {
+                    type: "warning",
+                    duration: 5000,
+                    animationDuration: 1000,
+                    animationType: "zoom-in",
+                    placement: "bottom",
+                  }
                 );
-              } else if (isConnected && isInternetReachable) {
+              }
+              if (isConnected) {
                 try {
                   const token = await AsyncStorage.getItem(
                     StorageKeys.tokenKey
                   );
                   const code = await SynchronizeVLCD4s(token);
                   setIsSyncing(false);
-                  if (code === 200) {
+                  if (!code) {
+                  } else if (code === 200) {
                     Alert.alert("VL/CD4 synchronization was successful!");
                   } else if (code < 0) {
                     Alert.alert("No VL/CD4 items to synchronize!");
@@ -115,7 +141,7 @@ export default function VLCD4ListScreen() {
 
           <ActionButton.Item
             buttonColor={Colors.bluish}
-            title="Refresh Contact List"
+            title="Refresh VL/CD4 List"
             textStyle={styles.actionText}
             textContainerStyle={styles.textContainer}
             onPress={async () => {
@@ -157,12 +183,227 @@ export default function VLCD4ListScreen() {
             <Modal
               visible={showModal}
               dismissable={true}
-              contentContainerStyle={styles.modalContainer}
+              contentContainerStyle={[
+                styles.modalContainer,
+                {
+                  borderWidth: 5,
+                  borderColor: Colors.secondary,
+                  elevation: 30,
+                },
+              ]}
               onDismiss={() => setShowModal(false)}
             >
-              <Text>
-                Will show details of the clicked message. Yet to be impmented!
-              </Text>
+              <ScrollView>
+                <Grid>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"First Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.firstName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow]}>
+                    <Col>
+                      <AppText>{"Last Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.lastName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Primary Clinic"}</AppText>
+                    </Col>
+
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (facilities?.find((f) => f?.id == patient?.facilityID)
+                            ?.name || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Date Taken"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateTaken
+                            ? new Date(item?.dateTaken)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Test Type"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (TestType[String(item?.testType)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Source"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (Cd4CountResultSource[String(item?.source)]?.label ||
+                            "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Have Result"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " + (YesNo[String(item?.haveResult)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Next Test Date"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.nextTestDate
+                            ? new Date(item?.nextTestDate)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Result"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.result
+                            ? item?.result
+                            : item?.tnd
+                            ? item?.tnd
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+
+                  <Row style={[styles.modalRow, { paddingTop: 20 }]}>
+                    <Col>
+                      <IconButton
+                        icon={"delete"}
+                        animated={true}
+                        //background={Colors.danger}
+                        color={Colors.danger}
+                        size={20}
+                        style={{
+                          borderColor: Colors.danger,
+                          borderWidth: 1.5,
+                        }}
+                        onPress={() => {
+                          Alert.alert(
+                            `Delete ${patient?.firstName} ${patient?.lastName}'s VL/CD4 Item`,
+                            "Are you sure you want to delete this VL/CD4 item?",
+                            [
+                              {
+                                text: "No",
+                                style: "cancel",
+                                onPress: () => null,
+                              },
+                              {
+                                text: "Delete",
+                                style: "default",
+                                onPress: async () => {
+                                  if (item) {
+                                    const newVLs = vls.filter(
+                                      (v) =>
+                                        JSON.stringify(v) !==
+                                        JSON.stringify(item)
+                                    );
+                                    console.log(newVLs);
+                                    await AsyncStorage.setItem(
+                                      StorageKeys.vls,
+                                      JSON.stringify(newVLs)
+                                    );
+                                    Alert.alert(
+                                      "DELETE ACTION",
+                                      "Item deleted Successfully!"
+                                    );
+                                    setShowModal(false);
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Button
+                        color={Colors.primary}
+                        icon={"close"}
+                        mode="outlined"
+                        style={{ maxWidth: 120, elevation: 20 }}
+                        onPress={() => {
+                          setShowModal(false);
+                        }}
+                      >
+                        Close
+                      </Button>
+                    </Col>
+                  </Row>
+                </Grid>
+              </ScrollView>
             </Modal>
           </Portal>
         </Provider>
@@ -173,7 +414,12 @@ export default function VLCD4ListScreen() {
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => {
             return (
-              <TouchableHighlight onPress={() => setShowModal(true)}>
+              <TouchableHighlight
+                onPress={() => {
+                  setShowModal(true);
+                  setItem(item);
+                }}
+              >
                 <View style={styles.listItemContainer}>
                   <VLCD4ListItem vl={item} patient={patient} index={index} />
                 </View>

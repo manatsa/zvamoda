@@ -9,6 +9,7 @@ import AppTextInput from "../../components/wrappers/AppTextInput";
 import AppFormSingleCheckBox from "../../components/form/AppFormSingleCheckBox";
 import YesNo from "../../models/YesNo";
 import AppCallbackFormField from "../../components/form/AppCallbackFormField";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function VLCD4GeneralDetailsStep({
   initValues,
@@ -46,18 +47,10 @@ export default function VLCD4GeneralDetailsStep({
         <AppFormField
           name={"result"}
           placeholder="Enter numeric result or tnd"
-          //keyboardType={"numeric"}
-          // callback={exclusiveTextResult}
         />
       )}
 
-      {/* {results === "0" && (
-        <AppFormSingleCheckBox
-          name={"tnd"}
-          callback={exclusiveResult}
-          label={"TND"}
-        />
-      )} */}
+      <AppDatePicker name={"nextTestDate"} label={"Next Test Date"} />
 
       <View style={styles.buttonContainer}>
         <AppButtonSmall title={"Back"} onPress={onBack} />

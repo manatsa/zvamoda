@@ -4,6 +4,7 @@ import Colors from "../../config/Colors";
 import { AppForm, AppFormField } from "../../components/form";
 import AppSubmitButtonSmall from "../../components/form/AppSubmitButtonSmall";
 import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewReferralGeneralInfoStep({
   initValues,
@@ -17,9 +18,11 @@ export default function NewReferralGeneralInfoStep({
       validationSchema={validationSchema}
       onSubmit={onNextStep}
     >
-      <AppDateComponent name="referralDate" label="Referral Date" />
+      {/* <AppDateComponent name="referralDate" label="Referral Date" /> */}
+      <AppDatePicker name={"referralDate"} label={"Referral Date"} />
 
-      <AppDateComponent name="expectedVisitDate" label="Expected Visit Date" />
+      {/* <AppDateComponent name="expectedVisitDate" label="Expected Visit Date" /> */}
+      <AppDatePicker name={"expectedVisitDate"} label={"Expected Visit Date"} />
 
       <AppFormField
         name="organisation"
@@ -27,7 +30,8 @@ export default function NewReferralGeneralInfoStep({
         icon="none"
       />
 
-      <AppDateComponent name="dateAttended" label="Date Attended" />
+      {/* <AppDateComponent name="dateAttended" label="Date Attended" /> */}
+      <AppDatePicker name={"dateAttended"} label={"Date Attended"} />
 
       <AppFormField
         name="designation"

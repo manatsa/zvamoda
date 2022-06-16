@@ -1,4 +1,6 @@
 import * as yup from "yup";
+
+const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 export default [
   yup.object().shape({
     screenedForTb: yup
@@ -10,10 +12,16 @@ export default [
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
       .label("SCREENING DATE")
-      .typeError(
-        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
+      .when(["screenedForTb", "identifiedWithTb"], {
+        is: (val, identified) => val === "0" && identified === "0",
+        then: yup.date().required("Please specify screening date."),
+      })
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
       )
-      .max(new Date(), "Date screened cannot be in future"),
+      .max(tomorrow, "Date screened cannot be in future"),
     identifiedWithTb: yup.string().when("screenedForTb", {
       is: (val) => val && val === "0",
       then: yup.string().required("Please specify screening result."),
@@ -56,7 +64,7 @@ export default [
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
-      .max(new Date(), "Future date not allowed here.")
+      .max(tomorrow, "Future date not allowed here.")
       .when(["screenedForTb", "identifiedWithTb", "onTBTreatment"], {
         is: (screened, identified, treat) =>
           screened &&
@@ -65,10 +73,27 @@ export default [
           screened === "0" &&
           identified === "0" &&
           treat === "0",
-        then: yup.date().required("Please specify date started treatment."),
+        then: yup
+          .date()
+          .required("Please specify date started treatment.")
+          .test(
+            "is-valid-year",
+            "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+            (value) =>
+              !value || (value && String(value.getFullYear()).length == 4)
+          ),
       }),
-    dateCompletedTreatment: yup.date().nullable(),
+    dateCompletedTreatment: yup
+      .date()
+      .nullable()
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      )
+      .max(tomorrow, "This date cannot be in future"),
   }),
+
   yup.object().shape({
     referredForInvestigation: yup
       .string()
@@ -93,12 +118,23 @@ export default [
         is: (onIpt, eligible) =>
           eligible && onIpt && eligible === "0" && onIpt === "0",
         then: yup.date().required("Please specify date client started TPT."),
-      }),
+      })
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      )
+      .max(tomorrow, "This date cannot be in future"),
     dateCompletedIpt: yup
       .date()
       .nullable()
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
+      )
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
       ),
     startedOnIpt: yup.string().when("eligibleForIpt", {
       is: (eligible) => eligible && eligible === "0",
@@ -112,12 +148,26 @@ export default [
       .when(["eligibleForIpt", "startedOnIpt"], {
         is: (eligible, started) =>
           eligible && started && eligible === "0" && started === "0",
-        then: yup.date().required("Date client started TPT cannot be empty!"),
-      }),
+        then: yup
+          .date()
+          .required("Date client started TPT cannot be empty!")
+          .test(
+            "is-valid-year",
+            "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+            (value) =>
+              !value || (value && String(value.getFullYear()).length == 4)
+          ),
+      })
+      .max(tomorrow, "This date cannot be in future"),
     dateCompletedOnIpt: yup
       .date()
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
+      )
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
       ),
   }),
 ];

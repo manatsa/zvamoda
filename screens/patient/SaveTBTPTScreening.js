@@ -7,6 +7,8 @@ export default async function SavePatientTBScreening(
   patient,
   navigation
 ) {
+  //console.log("\n\nVALUES::", values, "\n");
+
   if (values["screenedForTb"] !== "0") {
     values["dateScreened"] = null;
     values["identifiedWithTb"] = "";
@@ -19,7 +21,7 @@ export default async function SavePatientTBScreening(
     values["dateStartedTreatment"] = null;
     values["dateCompletedTreatment"] = null;
   }
-  if (values["onTBTreatment"] !== "1") {
+  if (values["onTBTreatment"] === "0") {
     values["referredForInvestigation"] = "";
     values["eligibleForIpt"] = "";
     values["onIpt"] = "";
@@ -37,7 +39,10 @@ export default async function SavePatientTBScreening(
   let current = await AsyncStorage.getItem(StorageKeys.tbScreeningKey);
   let tbs = [];
   if (current) {
-    tbs = JSON.parse(current);
+    const tbz = JSON.parse(current);
+    tbz.forEach((t) => {
+      tbs.push(t);
+    });
   }
 
   let newValues = {
@@ -45,16 +50,23 @@ export default async function SavePatientTBScreening(
     ...{ patient: patient.id },
   };
 
-  tbs.push(newValues);
-  console.log(tbs);
-
-  const mergedTBString = JSON.stringify(tbs);
-  if (mergedTBString) {
-    await AsyncStorage.setItem(StorageKeys.tbScreeningKey, mergedTBString);
-    Alert.alert("TB screening item saved successfully");
+  if (newValues.patient && newValues.patient.length > 0) {
+    tbs.push(newValues);
+    //console.log("\n\n >>> TBS >>>> \n", newValues, "\n\n");
+    const mergedTBString = JSON.stringify(tbs);
+    if (mergedTBString) {
+      await AsyncStorage.setItem(StorageKeys.tbScreeningKey, mergedTBString);
+      Alert.alert("TB screening item saved successfully");
+    } else {
+      console.log("Nothing to save");
+    }
   } else {
-    console.log("Nothing to save");
+    Alert.alert(
+      "ERROR SAVING ITEM",
+      "TB/TPT item could not be saved.\n Please enter the item again."
+    );
   }
+
   navigation.navigate("TBList");
 }
 

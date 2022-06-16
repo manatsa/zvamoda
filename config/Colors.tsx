@@ -10,4 +10,5 @@ export default {
   dodger: "dodgerblue",
   purple: "#6A0DAD",
   greenish: "#42D322",
+  smokygrey: "#CCCDDD",
 };

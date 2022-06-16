@@ -13,14 +13,25 @@ export default async function SaveNewClient(values, navigation) {
     ...values,
   };
 
-  clients.push(newValues);
-  const mergedClientsString = JSON.stringify(clients);
-  if (mergedClientsString) {
-    await AsyncStorage.setItem(StorageKeys.newPatientsKey, mergedClientsString);
-    Alert.alert("New Client saved successfully");
+  if (newValues.primaryClinic && newValues.primaryClinic.length > 0) {
+    clients.push(newValues);
+    const mergedClientsString = JSON.stringify(clients);
+    if (mergedClientsString) {
+      await AsyncStorage.setItem(
+        StorageKeys.newPatientsKey,
+        mergedClientsString
+      );
+      Alert.alert("New Client saved successfully");
+    } else {
+      console.log("Nothing to save");
+    }
   } else {
-    console.log("Nothing to save");
+    Alert.alert(
+      "ERROR SAVING ITEM",
+      "Patient item could not be saved.\n Please enter the item again."
+    );
   }
+
   navigation.navigate("ClientList");
 }
 

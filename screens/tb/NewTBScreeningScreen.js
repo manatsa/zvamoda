@@ -43,7 +43,6 @@ export default function NewTBScreeningScreen({ navigation }) {
   const stepLabels = ["TB General Details", "TPT General Details"];
 
   const submitHandler = async (values, setCurrentStep) => {
-    //rconsole.log(values);
     try {
       await SavePatientTBScreening(values, patient, navigation);
       setMergedValues(initState);

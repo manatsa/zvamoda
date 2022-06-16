@@ -2,7 +2,7 @@
   "expo": {
     "name": "zvamoda",
     "slug": "zvamoda",
-    "version": "1.0.2",
+    "version": "1.0.3",
     "orientation": "default",
     "icon": "./assets/applogo.png",
     "splash": {
@@ -25,7 +25,7 @@
         "backgroundColor": "#E6E6FA"
       },
       "package": "zw.org.zvandiri.zvamoda",
-      "versionCode": 3
+      "versionCode": 4
     },
     "web": {
       "favicon": "./assets/applogo.png"

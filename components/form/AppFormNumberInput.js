@@ -24,9 +24,10 @@ function AppFormNumberInput({ name, label, callback, ...otherProps }) {
             setFieldValue(name, value);
             callback ? callback(value) : null;
           }}
-          value={String(values[name]) || ""}
+          value={String(values[name]) || "0"}
           {...otherProps}
         />
+
         <AppErrorMessage message={errors[name]} visible={touched[name]} />
       </View>
     </>

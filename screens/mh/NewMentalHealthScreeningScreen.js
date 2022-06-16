@@ -7,16 +7,14 @@ import AppFormPicker from "../../components/form/AppFormPicker";
 import YesNo from "../../models/YesNo";
 import IdentifiedRisks from "../../models/IdentifiedRisks";
 import Supports from "../../models/Supports";
-import AppScrollScreen from "../../components/AppScrollScreen";
-import AppDateComponent from "../../components/wrappers/AppDateComponent";
 import Colors from "../../config/Colors";
 import AppFormCheckBox from "../../components/form/AppFormCheckBox";
 import SavePatientMHScreening from "../patient/SaveMentalhealthScreening";
 import StorageKeys from "../../utils/StorageKeys";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { HelperText } from "react-native-paper";
-import AppCombinedRotateScreenCenter from "../../components/animatedContainers/AppCombinedRotateScreenCenter";
 import AppFlipXScreenCenter from "../../components/animatedContainers/AppFlipXScreenCenter";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewMentalHealthScreeningScreen({ navigation }) {
   const [screened, setScreened] = useState("0");
@@ -75,7 +73,12 @@ export default function NewMentalHealthScreeningScreen({ navigation }) {
         />
         {screened === "0" && (
           <>
-            <AppDateComponent
+            {/* <AppDateComponent
+              name={"dateScreened"}
+              label={"Date Screened"}
+              color={Colors.primary}
+            /> */}
+            <AppDatePicker
               name={"dateScreened"}
               label={"Date Screened"}
               color={Colors.primary}

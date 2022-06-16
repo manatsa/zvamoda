@@ -1,6 +1,5 @@
 import { Easing, StyleSheet, View } from "react-native";
 import React, { useEffect, useState } from "react";
-import AppScreen from "../../components/AppScreen";
 import FormikStepper from "../../components/FormikStepper";
 import StorageKeys from "../../utils/StorageKeys";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -9,9 +8,9 @@ import Colors from "../../config/Colors";
 import VLCD4TestResultsStep from "./VLCD4TestResultsStep";
 import SavePatientVLCD4 from "../patient/SavePatientVLCD4";
 import VLInitValues from "../../models/formVars/VLInitValues";
-import cd4VLValidationSchema from "../../models/formVars/cd4VLValidationSchema";
 import VLGeneralDetailsStep from "./VLGeneralDetailsStep";
 import AppFlipXScreenCenter from "../../components/animatedContainers/AppFlipXScreenCenter";
+import vlValidationSchema from "../../models/formVars/vlValidationSchema";
 
 export default function NewVLCD4Screen({ navigation }) {
   const [mergedValues, setMergedValues] = useState({});
@@ -66,7 +65,7 @@ export default function NewVLCD4Screen({ navigation }) {
         steps={steps}
         stepLabels={stepLabels}
         initialValues={VLInitValues}
-        validationSchema={cd4VLValidationSchema}
+        validationSchema={vlValidationSchema}
         mergedValues={mergedValues}
         setMergedValues={setMergedValues}
         onSubmit={submitHandler}

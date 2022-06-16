@@ -5,7 +5,7 @@ import {
   FlatList,
   Alert,
   Easing,
-  BackHandler,
+  ActivityIndicator,
 } from "react-native";
 import PatientListItem from "../components/PatientListItem";
 import AppTextInput from "../components/wrappers/AppTextInput";
@@ -17,18 +17,20 @@ import StorageKeys from "../utils/StorageKeys";
 import ActionButton from "react-native-simple-action-button";
 import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useToast } from "react-native-toast-notifications";
-import AppRotateScreenCenter from "../components/animatedContainers/AppRotateScreenCenter";
-import { IconButton } from "react-native-paper";
-import AppZoomOutScreenCenter from "../components/animatedContainers/AppZoomOutScreenCenter";
 import AppZoomOutViewScreen from "../components/animatedContainers/AppZoomOutViewScreen";
+import GetFromApi from "../api/GetAxiosClient";
 
 const PatientListScreen = ({ route, navigation }) => {
-  const patients = route.params.patients;
+  const [patients, setPatients] = useState(route.params.patients);
   const [filteredPatients, setFilteredPatients] = useState(patients);
   const [user, setUser] = useState(null);
+  const [token, setToken] = useState(null);
+  const [isSyncing, setIsSyncing] = useState(false);
   const toast = useToast();
 
   useEffect(async () => {
+    const token = await AsyncStorage.getItem(StorageKeys.tokenKey);
+    setToken(token);
     const u = await AsyncStorage.getItem(StorageKeys.currentUserKey);
     if (u) setUser(JSON.parse(u));
   }, []);
@@ -42,7 +44,37 @@ const PatientListScreen = ({ route, navigation }) => {
         btnOutRange={Colors.primary}
         outRangeScale={1.2}
       >
-        {/* {user?.userLevel === "DISTRICT" && ( */}
+        <ActionButton.Item
+          buttonColor={Colors.greenish}
+          title="Sync Patient List"
+          textStyle={styles.actionText}
+          style={{ backgroundColor: "transparent" }}
+          onPress={async () => {
+            setIsSyncing(true);
+            const response = await GetFromApi(
+              token,
+              "/patient/refresh-patients"
+            ).catch((error) => {
+              Alert.alert("SYNC ERROR", error.toJSON().message);
+            });
+            if (response?.status === 200) {
+              // console.log(response?.data);
+              setPatients(response?.data);
+              toast.show("Client List re-synchronized successfully!", {
+                type: "success",
+                duration: 4500,
+                animationDuration: 1000,
+                animationType: "zoom-in",
+                placement: "bottom",
+              });
+            } else {
+              Alert.alert("SYNC ERROR", response?.statusText);
+            }
+            setIsSyncing(false);
+          }}
+        >
+          <Icon name="refresh" style={styles.actionButtonIcon} />
+        </ActionButton.Item>
         <ActionButton.Item
           buttonColor={Colors.dodger}
           title="New Client"
@@ -66,10 +98,13 @@ const PatientListScreen = ({ route, navigation }) => {
         ){/* } */}
         <ActionButton.Item
           buttonColor={Colors.bluish}
-          title="Refresh List"
+          title="Refresh Patient List"
           textStyle={styles.actionText}
           style={{ backgroundColor: "transparent" }}
-          onPress={() => {
+          onPress={async () => {
+            const ps = await AsyncStorage.getItem(StorageKeys.patientListKey);
+            const patientList = JSON.parse(ps);
+            setPatients(patientList);
             toast.show("Client List refreshed successfully!", {
               type: "success",
               duration: 2500,
@@ -138,14 +173,28 @@ const PatientListScreen = ({ route, navigation }) => {
 
                   navigation.navigate("patientDetails", { patient: item });
                 } catch (error) {
-                  Alert.alert("OPERATION ERROR", error.response.data);
+                  Alert.alert("OPERATION ERROR", error?.response?.data);
                 }
               }}
             />
           );
         }}
-        keyExtractor={(item) => item.id.toString()}
+        keyExtractor={(item) =>
+          item?.id?.toString() + item?.firstName + item?.dateOfBirth?.toString()
+        }
       />
+      {isSyncing && (
+        <View style={styles.activityIndicatorContainer}>
+          <ActivityIndicator
+            size={"large"}
+            animating={true}
+            color={Colors.greenish}
+          />
+          <View>
+            <AppText style={styles.indicatorText}>Synchronizing...wait</AppText>
+          </View>
+        </View>
+      )}
     </AppZoomOutViewScreen>
   );
 };
@@ -180,6 +229,11 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: Colors.primary,
     backgroundColor: "transparent",
+  },
+  activityIndicatorContainer: {
+    flexDirection: "row",
+    width: "100%",
+    justifyContent: "center",
   },
 });
 

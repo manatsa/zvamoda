@@ -8,10 +8,9 @@ import ActionButton from "react-native-circular-action-menu";
 import EIcon from "react-native-vector-icons/Entypo";
 import Icon from "react-native-vector-icons/Ionicons";
 import FIcon from "react-native-vector-icons/FontAwesome5";
-import { Text } from "react-native-paper";
 import MenuBackdrop from "../../utils/MenuBackdrop";
-import AppZoomOutScreenCenter from "../../components/animatedContainers/AppZoomOutScreenCenter";
 import AppRotateScreenCenter from "../../components/animatedContainers/AppRotateScreenCenter";
+import AppZoomOutViewScreen from "../../components/animatedContainers/AppZoomOutViewScreen";
 
 function PatientDetailsScreen({ route, navigation }) {
   const [patient, setPatient] = useState(null);
@@ -30,10 +29,9 @@ function PatientDetailsScreen({ route, navigation }) {
     getData();
   }, []);
 
-  // Alert.alert("Patient Age : ", String(patient?.age));
   return (
     <>
-      <AppRotateScreenCenter easing={Easing.in} duration={600}>
+      <AppZoomOutViewScreen easing={Easing.linear} duration={600}>
         <ActionButton
           buttonColor={Colors.secondary}
           radiua={150}
@@ -127,14 +125,14 @@ function PatientDetailsScreen({ route, navigation }) {
             title="TB Screening"
             size={60}
             onPress={() => {
-              if (patient?.age > 10) {
-                navigation.navigate("tbDetails", { screen: "NewTB" });
-              } else {
-                Alert.alert(
-                  "Minimum Age Restriction",
-                  "Client below age (10 years) allowed for screening"
-                );
-              }
+              //if (patient?.age > 10) {
+              navigation.navigate("tbDetails", { screen: "NewTB" });
+              // } else {
+              //   Alert.alert(
+              //     "Minimum Age Restriction",
+              //     "Client below age (10 years) allowed for screening"
+              //   );
+              // }
             }}
           >
             <View style={styles.labelContainer}>
@@ -205,7 +203,7 @@ function PatientDetailsScreen({ route, navigation }) {
             </View>
           </View>
         </ScrollView>
-      </AppRotateScreenCenter>
+      </AppZoomOutViewScreen>
     </>
   );
 }

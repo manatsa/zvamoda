@@ -51,13 +51,21 @@ export default async function SavePatientContact(values, patient, navigation) {
   if (current) {
     contacts = JSON.parse(current);
   }
-  contacts.push(newValues);
-  const mergedContactString = JSON.stringify(contacts);
-  if (mergedContactString) {
-    await AsyncStorage.setItem(StorageKeys.contacts, mergedContactString);
+  if (newValues.patient && newValues.patient.length > 0) {
+    contacts.push(newValues);
+    const mergedContactString = JSON.stringify(contacts);
+    if (mergedContactString) {
+      await AsyncStorage.setItem(StorageKeys.contacts, mergedContactString);
+    } else {
+      console.log("Nothing to save");
+    }
   } else {
-    console.log("Nothing to save");
+    Alert.alert(
+      "ERROR SAVING ITEM",
+      "Contact item could not be saved.\n Please enter the item again."
+    );
   }
+
   navigation.navigate("ContactList");
 }
 

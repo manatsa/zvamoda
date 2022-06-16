@@ -1,5 +1,6 @@
 import * as yup from "yup";
 
+const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 export default yup.object().shape({
   screenedForMentalHealth: yup
     .string()
@@ -14,7 +15,12 @@ export default yup.object().shape({
     .when("screenedForMentalHealth", {
       is: (val) => val && val === "0",
       then: yup.date().required("Please specify screening date."),
-    }),
+    })
+    .test(
+      "is-valid-year",
+      "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+      (value) => !value || (value && String(value.getFullYear()).length == 4)
+    ),
   risk: yup.string().when("screenedForMentalHealth", {
     is: (val) => val && val === "0",
     then: yup.string().required("Please specify if at risk."),

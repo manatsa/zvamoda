@@ -11,6 +11,7 @@ import DisclosureType from "../../models/DisclosureType";
 import HIVDisclosureLocation from "../../models/HIVDisclosureLocation";
 import TransmissionMode from "../../models/TransmissionMode";
 import AppDateComponent from "../../components/wrappers/AppDateComponent";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
 
 export default function NewClientDisclosureDetailsStep({
   initValues,
@@ -20,30 +21,6 @@ export default function NewClientDisclosureDetailsStep({
 }) {
   const [keyPopulation, setKeyPopulation] = useState("");
   const [hivStatusKnown, setHivStatusKnown] = useState("");
-
-  //   useEffect(() => {
-  //     const getData = async () => {
-  //       try {
-  //         const edu = await AsyncStorage.getItem(StorageKeys.educationKey);
-  //         let e = JSON.parse(edu);
-  //         setEducation(e);
-  //         const eduLevel = await AsyncStorage.getItem(
-  //           StorageKeys.educationLevelKey
-  //         );
-  //         let el = JSON.parse(eduLevel);
-  //         setEducationLevel(el);
-  //         const reason = await AsyncStorage.getItem(
-  //           StorageKeys.reasonForNotReachingOLevelKey
-  //         );
-  //         let r = JSON.parse(reason);
-  //         setReasonNotOLevel(r);
-  //       } catch (error) {
-  //         console.log(error);
-  //       }
-  //     };
-
-  //     getData();
-  //   }, []);
 
   return (
     <AppForm
@@ -79,7 +56,8 @@ export default function NewClientDisclosureDetailsStep({
 
       {hivStatusKnown === "0" && (
         <>
-          <AppDateComponent name={"dateTested"} label={"Select Test Date"} />
+          {/* <AppDateComponent name={"dateTested"} label={"Select Test Date"} /> */}
+          <AppDatePicker name={"dateTested"} label={"Select Test Date"} />
 
           <AppFormPicker
             icon={"none"}
@@ -111,7 +89,8 @@ export default function NewClientDisclosureDetailsStep({
         name="consentToMHealth"
       />
 
-      <AppDateComponent name={"dateJoined"} label={"Date joined zvandiri"} />
+      {/* <AppDateComponent name={"dateJoined"} label={"Date joined zvandiri"} /> */}
+      <AppDatePicker name={"dateJoined"} label={"Date joined zvandiri"} />
 
       <View style={styles.buttonContainer}>
         <AppButtonSmall title={"Back"} onPress={onBack} />

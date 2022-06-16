@@ -11,6 +11,8 @@ import AppDateComponent from "../../components/wrappers/AppDateComponent";
 import AppFormCheckBox from "../../components/form/AppFormCheckBox";
 import TbSymptoms from "../../models/TbSymptoms";
 import AppButtonSmall from "../../components/wrappers/AppButtonSmall";
+import AppDatePicker from "../../components/wrappers/AppDatePicker";
+import { useFormikContext } from "formik";
 
 export default function TPTScreeningGeneralInfoStep({
   initValues,
@@ -22,7 +24,9 @@ export default function TPTScreeningGeneralInfoStep({
   const [onTPT, setOnTPT] = useState("");
   const [startedTPT, setStartedTPT] = useState("");
   const [patient, setPatient] = useState([]);
+  const [value, setValue] = useState(null);
 
+  //console.log(value);
   return (
     <AppForm
       initialValues={initValues}
@@ -34,7 +38,9 @@ export default function TPTScreeningGeneralInfoStep({
         items={YesNo}
         label={"Referred For Investigation"}
         name="referredForInvestigation"
+        callback={setValue}
       />
+
       <AppFormPicker
         icon={"none"}
         items={YesNo}
@@ -62,11 +68,19 @@ export default function TPTScreeningGeneralInfoStep({
 
           {eligible === "0" && onTPT === "0" && (
             <>
-              <AppDateComponent
+              {/* <AppDateComponent
+                name={"dateStartedIpt"}
+                label={"Date Started TPT"}
+              /> */}
+              <AppDatePicker
                 name={"dateStartedIpt"}
                 label={"Date Started TPT"}
               />
-              <AppDateComponent
+              {/* <AppDateComponent
+                name={"dateCompletedIpt"}
+                label={"Date Completed TPT"}
+              /> */}
+              <AppDatePicker
                 name={"dateCompletedIpt"}
                 label={"Date Completed TPT"}
               />
@@ -83,11 +97,19 @@ export default function TPTScreeningGeneralInfoStep({
 
           {eligible === "0" && startedTPT === "0" && (
             <>
-              <AppDateComponent
+              {/* <AppDateComponent
+                name={"dateStartedOnIpt"}
+                label={"Date Started TPT"}
+              /> */}
+              <AppDatePicker
                 name={"dateStartedOnIpt"}
                 label={"Date Started TPT"}
               />
-              <AppDateComponent
+              {/* <AppDateComponent
+                name={"dateCompletedOnIpt"}
+                label={"Date Completed TPT"}
+              /> */}
+              <AppDatePicker
                 name={"dateCompletedOnIpt"}
                 label={"Date Completed TPT"}
               />

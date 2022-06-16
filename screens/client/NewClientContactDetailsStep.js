@@ -47,7 +47,9 @@ export default function NewClientContactDetailsStep({
 
       setFormattedFacilities(
         fs.map((e) => {
-          return { label: e.name, value: e.id };
+          const fac = { label: e.name, value: e.id };
+          //console.log("Facility >>> ", fac, "\n");
+          return fac;
         })
       );
 

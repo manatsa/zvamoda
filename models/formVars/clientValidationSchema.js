@@ -1,5 +1,6 @@
 import * as yup from "yup";
 
+const tomorrow = new Date(new Date().setDate(new Date().getDate() + 1));
 export default [
   yup.object().shape({
     status: yup.string().required("Status is required"),
@@ -17,13 +18,18 @@ export default [
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
       .required("Date of birth cannot be empty!")
-      .max(new Date(), "Future date not allowed here"),
+      .max(tomorrow, "Future date not allowed here")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
 
     oINumber: yup.string().required("OI/ART Number cannot be empty"),
     haveBirthCertificate: yup
       .string()
       .required("Please specify if client has birth certificate."),
-    clientType: yup.string(), //.required("Please specify client type."),
+    clientType: yup.string().required("Please specify client type."),
   }),
   yup.object().shape({
     maritalStatus: yup
@@ -40,7 +46,12 @@ export default [
       .typeError(
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
-      .max(new Date(), "Future date not allowed here"),
+      .max(tomorrow, "Future date not allowed here")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
     disability: yup
       .string()
       .required("Please specify if client has disability."),
@@ -103,7 +114,12 @@ export default [
         is: (h) => h === "0",
         then: yup.date().required("Please specify date tested."),
       })
-      .max(new Date(), "Future date not allowed here."),
+      .max(tomorrow, "Future date not allowed here.")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
     disclosureType: yup.string().when("hivStatusKnown", {
       is: (h) => h === "0",
       then: yup.string().required("Please specify disclosure type"),
@@ -123,7 +139,12 @@ export default [
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
       .required("Please input date client joined zvandiri.")
-      .max(new Date(), "Future date not allowed here"),
+      .max(tomorrow, "Future date not allowed here")
+      .test(
+        "is-valid-year",
+        "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",
+        (value) => !value || (value && String(value.getFullYear()).length == 4)
+      ),
   }),
   yup.object().shape({
     selfPrimaryCareGiver: yup.string().required("Please specify"),

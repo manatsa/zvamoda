@@ -2,6 +2,7 @@ import {
   Alert,
   Easing,
   FlatList,
+  ScrollView,
   StyleSheet,
   TouchableHighlight,
   View,
@@ -18,6 +19,8 @@ import MIcon from "react-native-vector-icons/MaterialCommunityIcons";
 import FIcon from "react-native-vector-icons/FontAwesome";
 import {
   ActivityIndicator,
+  Button,
+  IconButton,
   Modal,
   Portal,
   Provider,
@@ -28,6 +31,9 @@ import AppNetworkInfo from "../../utils/AppNetworkInfo";
 import TBListItem from "./TBListItem";
 import SynchronizeTBScreening from "../../storage/SynchronizeTBScreening";
 import AppFlipYScreenCenter from "../../components/animatedContainers/AppFlipYScreenCenter";
+import { Col, Grid, Row } from "react-native-easy-grid";
+import YesNo from "../../models/YesNo";
+import TbSymptoms from "../../models/TbSymptoms";
 
 export default function TBScreeningListScreen() {
   const [patient, setPatient] = useState(null);
@@ -36,6 +42,8 @@ export default function TBScreeningListScreen() {
   const [showModal, setShowModal] = useState(false);
   const toast = useToast();
   const [visible, setVisible] = useState(false);
+  const [item, setItem] = useState({});
+  const [facilities, setFacilities] = useState([]);
 
   const getData = async () => {
     const patientString = await AsyncStorage.getItem(StorageKeys.patient);
@@ -51,6 +59,12 @@ export default function TBScreeningListScreen() {
       tbs = r;
     }
     setTBs(tbs);
+
+    const facilitiesString = await AsyncStorage.getItem(
+      StorageKeys.facilitiesKey
+    );
+    const fcs = JSON.parse(facilitiesString);
+    setFacilities(fcs);
   };
 
   useEffect(() => {
@@ -78,18 +92,30 @@ export default function TBScreeningListScreen() {
               const connectivity = await AppNetworkInfo();
               const { isConnected, isInternetReachable } = connectivity;
               if (isConnected && !isInternetReachable) {
-                Alert.alert(
-                  "Network Status",
-                  "You're  connected but internet accessibility cannot be guaranteed!."
+                // Alert.alert(
+                //   "Network Status",
+                //   "You're  connected but internet accessibility cannot be guaranteed!."
+                // );
+                toast.show(
+                  "You're  connected but internet accessibility cannot be guaranteed!.",
+                  {
+                    type: "warning",
+                    duration: 5000,
+                    animationDuration: 1000,
+                    animationType: "zoom-in",
+                    placement: "bottom",
+                  }
                 );
-              } else if (isConnected && isInternetReachable) {
+              }
+              if (isConnected) {
                 try {
                   const token = await AsyncStorage.getItem(
                     StorageKeys.tokenKey
                   );
 
                   const code = await SynchronizeTBScreening(token);
-                  if (code === 200) {
+                  if (!code) {
+                  } else if (code === 200) {
                     Alert.alert(
                       "TB Screenings synchronization was successful!"
                     );
@@ -164,12 +190,377 @@ export default function TBScreeningListScreen() {
             <Modal
               visible={showModal}
               dismissable={true}
-              contentContainerStyle={styles.modalContainer}
+              contentContainerStyle={[
+                styles.modalContainer,
+                {
+                  borderWidth: 5,
+                  borderColor: Colors.secondary,
+                  elevation: 30,
+                },
+              ]}
               onDismiss={() => setShowModal(false)}
             >
-              <Text>
-                Will show details of the clicked message. Yet to be impmented!
-              </Text>
+              <ScrollView>
+                <Grid>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"First Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.firstName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow]}>
+                    <Col>
+                      <AppText>{"Last Name"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>{":: " + (patient?.lastName || "")}</Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Primary Clinic"}</AppText>
+                    </Col>
+
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (facilities?.find((f) => f?.id == patient?.facilityID)
+                            ?.name || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Screening Date"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateScreened
+                            ? new Date(item?.dateScreened)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Had TB Sympoms"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.identifiedWithTb)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"TB Sympoms"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          item?.tbSymptoms?.map(
+                            (s) => TbSymptoms.find((t) => t.value === s)?.label
+                          )}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={[styles.modalRow]}>
+                    <Col>
+                      <AppText>{"On TB Treatment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.onTBTreatment)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Started Treatment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateStartedTreatment
+                            ? new Date(item?.dateStartedTreatment)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Ended Treatment"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateCompletedTreatment
+                            ? new Date(item?.dateCompletedTreatment)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Investigation referral"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.referredForInvestigation)]
+                            ?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"TPT Eligible"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.eligibleForIpt)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Referred For TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.referredForIpt)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"On TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " + (YesNo[String(item?.onIpt)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Date Started TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateStartedIpt
+                            ? new Date(item?.dateStartedIpt)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{"Date Ended TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateCompletedIpt
+                            ? new Date(item?.dateCompletedIpt)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Started On TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (YesNo[String(item?.startedOnIpt)]?.label || "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row style={styles.modalRow}>
+                    <Col>
+                      <AppText>{" Date Started  On TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateStartedOnIpt
+                            ? new Date(item?.dateStartedOnIpt)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+                  <Row
+                    style={[
+                      styles.modalRow,
+                      {
+                        backgroundColor: Colors.smokygrey,
+                      },
+                    ]}
+                  >
+                    <Col>
+                      <AppText>{"Date Ended On TPT"}</AppText>
+                    </Col>
+                    <Col>
+                      <Text>
+                        {":: " +
+                          (item?.dateCompletedOnIpt
+                            ? new Date(item?.dateCompletedOnIpt)
+                                ?.toISOString()
+                                .slice(0, 10)
+                            : "")}
+                      </Text>
+                    </Col>
+                  </Row>
+
+                  <Row style={[styles.modalRow, { paddingTop: 20 }]}>
+                    <Col>
+                      <IconButton
+                        icon={"delete"}
+                        animated={true}
+                        //background={Colors.danger}
+                        color={Colors.danger}
+                        size={20}
+                        style={{
+                          borderColor: Colors.danger,
+                          borderWidth: 1.5,
+                        }}
+                        onPress={() => {
+                          Alert.alert(
+                            `Delete ${patient?.firstName} ${patient?.lastName}'s TB/TPT Item`,
+                            "Are you sure you want to delete this TB/TPT?",
+                            [
+                              {
+                                text: "No",
+                                style: "cancel",
+                                onPress: () => null,
+                              },
+                              {
+                                text: "Delete",
+                                style: "default",
+                                onPress: async () => {
+                                  if (item) {
+                                    const newTBs = tbs.filter(
+                                      (t) =>
+                                        JSON.stringify(t) !==
+                                        JSON.stringify(item)
+                                    );
+                                    await AsyncStorage.setItem(
+                                      StorageKeys.tbScreeningKey,
+                                      JSON.stringify(newTBs)
+                                    );
+                                    Alert.alert(
+                                      "DELETE ACTION",
+                                      "Item deleted Successfully!"
+                                    );
+                                    setShowModal(false);
+                                  }
+                                },
+                              },
+                            ]
+                          );
+                        }}
+                      />
+                    </Col>
+                    <Col>
+                      <Button
+                        color={Colors.primary}
+                        icon={"close"}
+                        mode="outlined"
+                        style={{ maxWidth: 120, elevation: 20 }}
+                        onPress={() => setShowModal(false)}
+                      >
+                        Close
+                      </Button>
+                    </Col>
+                  </Row>
+                </Grid>
+              </ScrollView>
             </Modal>
           </Portal>
         </Provider>
@@ -180,7 +571,12 @@ export default function TBScreeningListScreen() {
           keyExtractor={(item, index) => index.toString()}
           renderItem={({ item, index }) => {
             return (
-              <TouchableHighlight onPress={() => setShowModal(true)}>
+              <TouchableHighlight
+                onPress={() => {
+                  setShowModal(true);
+                  setItem(item);
+                }}
+              >
                 <View style={styles.listItemContainer}>
                   <TBListItem tbScreening={item} index={index} />
                 </View>
