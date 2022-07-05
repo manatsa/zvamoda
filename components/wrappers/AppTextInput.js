@@ -3,11 +3,11 @@ import { View, TextInput, StyleSheet, Platform } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
 import Colors from "../../config/Colors";
 
-function AppTextInput({ icon, ...otherProps }) {
+function AppTextInput({ icon, stylez, fontSize, ...otherProps }) {
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, stylez]}>
       {icon && icon !== "none" && icon !== "" && (
-        <MaterialIcons name={icon} style={styles.icon} size={35} />
+        <MaterialIcons name={icon} style={styles.icon} size={30} />
       )}
       <TextInput style={styles.textInput} {...otherProps} />
     </View>
@@ -17,7 +17,7 @@ function AppTextInput({ icon, ...otherProps }) {
 const styles = StyleSheet.create({
   container: {
     width: "100%",
-    marginBottom: 10,
+    marginBottom: 5,
     paddingHorizontal: 15,
     marginTop: 20,
     flexDirection: "row",

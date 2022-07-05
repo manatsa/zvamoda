@@ -33,7 +33,6 @@ export default function NewContactScreen({ navigation }) {
         const l = await AsyncStorage.getItem(StorageKeys.locationsKey);
         const loc = JSON.parse(l);
         setLocations(loc);
-        //console.log(loc);
         const po = await AsyncStorage.getItem(StorageKeys.positionsKey);
         const pos = JSON.parse(po);
         setPositions(pos);

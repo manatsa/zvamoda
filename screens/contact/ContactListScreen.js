@@ -35,7 +35,7 @@ import YesNo from "../../models/YesNo";
 import Position from "../../models/Position";
 import { Col, Grid, Row } from "react-native-easy-grid";
 
-export default function ContactListScreen() {
+export default function ContactListScreen({ route, navigation }) {
   const [patient, setPatient] = useState(null);
   const [contacts, setContacts] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);

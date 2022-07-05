@@ -12,7 +12,6 @@ const GetFromApi = async (token, segment) => {
       "Content-Type": "application/json",
       Authorization: "Bearer " + token,
     },
-    timeout: 120000,
     timeoutErrorMessage: "Your request has timed out.",
   });
 

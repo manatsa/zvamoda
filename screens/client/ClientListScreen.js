@@ -58,6 +58,7 @@ export default function ClientListScreen() {
     if (clientsString) {
       const conts = JSON.parse(clientsString);
       setClients(conts);
+      setClients(conts);
     }
   };
 

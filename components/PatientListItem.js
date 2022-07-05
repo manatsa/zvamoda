@@ -9,7 +9,7 @@ function PatientListItem({ item, index, onPress }) {
     <TouchableHighlight
       onPress={onPress}
       underlayColor={"lightgrey"}
-      style={styles.touchable}
+      style={[styles.touchable, { backgroundColor: Colors.light }]}
     >
       <View style={styles.detailsContainer}>
         <View style={styles.details}>

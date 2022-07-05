@@ -245,6 +245,7 @@ export default function FacilityManagement({ route, navigation }) {
         highlightColumns={false}
         padding={true}
         exportable={false}
+        property
         setFetching={setFetching}
         setProgress={setProgress}
       />

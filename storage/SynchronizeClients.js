@@ -20,9 +20,8 @@ export default async function SynchronizeClients(token) {
     });
     code = response?.status;
     const data = response?.data;
-    //console.log("\n\n\n Response Code::", code, "\n Data ::", data);
+
     if (code === 200) {
-      // const newPatients = JSON.parse(data);
       const allClientsString = await AsyncStorage.getItem(
         StorageKeys.patientListKey
       );

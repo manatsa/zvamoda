@@ -6,6 +6,7 @@ import {
   Alert,
   Easing,
   ActivityIndicator,
+  Text,
 } from "react-native";
 import PatientListItem from "../components/PatientListItem";
 import AppTextInput from "../components/wrappers/AppTextInput";
@@ -19,21 +20,144 @@ import Icon from "react-native-vector-icons/MaterialCommunityIcons";
 import { useToast } from "react-native-toast-notifications";
 import AppZoomOutViewScreen from "../components/animatedContainers/AppZoomOutViewScreen";
 import GetFromApi from "../api/GetAxiosClient";
+import AppNetworkInfo from "../utils/AppNetworkInfo";
+import { SwipeListView } from "react-native-swipe-list-view";
+import {
+  Divider,
+  IconButton,
+  Modal,
+  Portal,
+  Provider,
+} from "react-native-paper";
+import * as yup from "yup";
+import { AppForm, AppSubmitButton } from "../components/form";
+import AppDatePicker from "../components/wrappers/AppDatePicker";
+import AppFlipYScrollViewScreen from "../components/animatedContainers/AppFlipYScrollViewScreen";
+import AppFormLoadingSubmit from "../components/form/AppFormLoadingSubmit";
+
+const statsInitValues = {
+  start: new Date(),
+  end: new Date(),
+};
+
+const statsValidationSchema = yup.object().shape({
+  start: yup
+    .date()
+    .typeError(
+      "Invalid date. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each"
+    )
+    .required("Start date cannot be empty!"),
+  end: yup
+    .date()
+    .typeError(
+      "Invalid date. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each"
+    )
+    .required("End date cannot be empty!"),
+});
 
 const PatientListScreen = ({ route, navigation }) => {
-  const [patients, setPatients] = useState(route.params.patients);
+  const [patients, setPatients] = useState([]);
   const [filteredPatients, setFilteredPatients] = useState(patients);
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(null);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isFeching, setIsFetching] = useState(false);
+  const [showStats, setShowStats] = useState(false);
+  const [shwoDates, setShowDates] = useState(false);
+  const [item, setItem] = useState(null);
+  const [data, setData] = useState([]);
+  const [cohort, setCohort] = useState(route?.params?.patients?.length);
   const toast = useToast();
 
   useEffect(async () => {
+    const patientString = await AsyncStorage.getItem(
+      StorageKeys.patientListKey
+    );
+    const paties = JSON.parse(patientString);
+    // console.log(paties);
+    setPatients(paties);
+    setFilteredPatients(paties);
     const token = await AsyncStorage.getItem(StorageKeys.tokenKey);
     setToken(token);
     const u = await AsyncStorage.getItem(StorageKeys.currentUserKey);
     if (u) setUser(JSON.parse(u));
-  }, []);
+  }, [cohort]);
+
+  const onRefresh = async () => {
+    const connectivity = await AppNetworkInfo();
+    const { isConnected, isInternetReachable } = connectivity;
+    if (isConnected && !isInternetReachable) {
+      toast.show(
+        "You're  connected but internet accessibility cannot be guaranteed!.",
+        {
+          type: "warning",
+          duration: 5000,
+          animationDuration: 1000,
+          animationType: "zoom-in",
+          placement: "bottom",
+        }
+      );
+    }
+
+    if (isConnected) {
+      setIsSyncing(true);
+      const response = await GetFromApi(
+        token,
+        "/patient/refresh-patients"
+      ).catch((error) => {
+        Alert.alert("SYNC ERROR", error.toJSON().message);
+      });
+      if (response?.status === 200) {
+        await AsyncStorage.setItem(
+          StorageKeys.patientListKey,
+          JSON.stringify(response?.data)
+        );
+        setCohort(response?.data?.length);
+
+        toast.show("Client list fetched successfully!", {
+          type: "success",
+          duration: 4500,
+          animationDuration: 1000,
+          animationType: "zoom-in",
+          placement: "bottom",
+        });
+      } else {
+        Alert.alert("SYNC ERROR", response?.statusText);
+      }
+      setIsSyncing(false);
+    } else {
+      Alert.alert(
+        "Network Status",
+        "You're not connected and cannot access online activities!.\n Please connect to internet and try agin."
+      );
+    }
+  };
+
+  const onSubmit = async (values) => {
+    setIsFetching(true);
+    const { start, end } = values;
+    const startFinal = new Date(String(start))?.toISOString()?.slice(0, 10);
+    const endFinal = new Date(String(end))?.toISOString()?.slice(0, 10);
+
+    try {
+      if (item && item?.id && item?.id !== "") {
+        const segment = `/patient/get-patient-stats/?patient=${item?.id}&start=${startFinal}&end=${endFinal}`;
+        const personData = await GetFromApi(token, segment).catch((error) => {
+          Alert.alert("ERROR FECTHING DATA", error.toJSON().message);
+        });
+
+        //console.log("DATA :: ", personData?.data?.contacts);
+        setShowDates(false);
+        setIsFetching(false);
+        navigation.navigate("patientLineItems", {
+          data: personData?.data,
+          patient: item,
+        });
+      }
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   return (
     <AppZoomOutViewScreen easing={Easing.linear} duration={600}>
@@ -44,37 +168,6 @@ const PatientListScreen = ({ route, navigation }) => {
         btnOutRange={Colors.primary}
         outRangeScale={1.2}
       >
-        <ActionButton.Item
-          buttonColor={Colors.greenish}
-          title="Sync Patient List"
-          textStyle={styles.actionText}
-          style={{ backgroundColor: "transparent" }}
-          onPress={async () => {
-            setIsSyncing(true);
-            const response = await GetFromApi(
-              token,
-              "/patient/refresh-patients"
-            ).catch((error) => {
-              Alert.alert("SYNC ERROR", error.toJSON().message);
-            });
-            if (response?.status === 200) {
-              // console.log(response?.data);
-              setPatients(response?.data);
-              toast.show("Client List re-synchronized successfully!", {
-                type: "success",
-                duration: 4500,
-                animationDuration: 1000,
-                animationType: "zoom-in",
-                placement: "bottom",
-              });
-            } else {
-              Alert.alert("SYNC ERROR", response?.statusText);
-            }
-            setIsSyncing(false);
-          }}
-        >
-          <Icon name="refresh" style={styles.actionButtonIcon} />
-        </ActionButton.Item>
         <ActionButton.Item
           buttonColor={Colors.dodger}
           title="New Client"
@@ -105,6 +198,7 @@ const PatientListScreen = ({ route, navigation }) => {
             const ps = await AsyncStorage.getItem(StorageKeys.patientListKey);
             const patientList = JSON.parse(ps);
             setPatients(patientList);
+            setCohort(patientList?.length);
             toast.show("Client List refreshed successfully!", {
               type: "success",
               duration: 2500,
@@ -154,9 +248,13 @@ const PatientListScreen = ({ route, navigation }) => {
         />
       </View>
 
-      <FlatList
+      <SwipeListView
         style={{ minWidth: "90%", zIndex: -10 }}
         data={filteredPatients || patients}
+        onRefresh={onRefresh}
+        refreshing={isSyncing}
+        bounces={true}
+        initialRightActionState={true}
         renderItem={({ item, index }) => {
           return (
             <PatientListItem
@@ -164,7 +262,6 @@ const PatientListScreen = ({ route, navigation }) => {
               index={index}
               onPress={async () => {
                 try {
-                  //console.log(item);
                   const patientString = JSON.stringify(item);
                   await AsyncStorage.setItem(
                     StorageKeys.patient,
@@ -182,6 +279,34 @@ const PatientListScreen = ({ route, navigation }) => {
         keyExtractor={(item) =>
           item?.id?.toString() + item?.firstName + item?.dateOfBirth?.toString()
         }
+        renderHiddenItem={(data, rowMap) => (
+          <View style={styles.rowBack}>
+            <IconButton
+              //icon={"eye"}
+              icon={"menu"}
+              size={40}
+              style={{ backgroundColor: Colors.smokygrey }}
+              color={Colors.secondary}
+              onPress={() => {
+                setItem(data.item);
+                setShowDates(true);
+              }}
+            />
+            <IconButton
+              //icon={"eye"}
+              icon={"menu"}
+              size={40}
+              style={{ backgroundColor: Colors.smokygrey }}
+              color={Colors.secondary}
+              onPress={() => {
+                setItem(data.item);
+                setShowDates(true);
+              }}
+            />
+          </View>
+        )}
+        leftOpenValue={75}
+        rightOpenValue={-75}
       />
       {isSyncing && (
         <View style={styles.activityIndicatorContainer}>
@@ -195,9 +320,58 @@ const PatientListScreen = ({ route, navigation }) => {
           </View>
         </View>
       )}
+
+      <Provider>
+        <Portal>
+          <Modal
+            visible={shwoDates}
+            dismissable={true}
+            contentContainerStyle={[
+              styles.modalContainer,
+              {
+                borderWidth: 5,
+                borderColor: Colors.secondary,
+                elevation: 30,
+                flex: 1,
+                height: 500,
+                padding: 20,
+                backgroundColor: Colors.smokygrey,
+              },
+            ]}
+            onDismiss={() => setShowDates(false)}
+          >
+            <AppFlipYScrollViewScreen>
+              <AppText
+                style={{
+                  color: Colors.bluish,
+                  textDecorationLine: "underline",
+                }}
+              >
+                Dates For Line Items
+              </AppText>
+              <Divider />
+              <AppForm
+                initialValues={statsInitValues}
+                validationSchema={statsValidationSchema}
+                onSubmit={onSubmit}
+              >
+                <AppDatePicker name={"start"} label={"Start Date"} />
+                <AppDatePicker name={"end"} label={"End Date"} />
+                <AppFormLoadingSubmit
+                  title={"Fetch Line Items"}
+                  isLoading={isFeching}
+                  color={Colors.greenish}
+                  loadingLabel={"Fetching data... wait"}
+                />
+              </AppForm>
+            </AppFlipYScrollViewScreen>
+          </Modal>
+        </Portal>
+      </Provider>
     </AppZoomOutViewScreen>
   );
 };
+// );
 
 const styles = StyleSheet.create({
   searchContainer: {
@@ -234,6 +408,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     width: "100%",
     justifyContent: "center",
+  },
+  rowBack: {
+    width: "100%",
+    backgroundColor: "#DDD",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 5,
+    zIndex: -100,
   },
 });
 

@@ -104,12 +104,12 @@ function PatientDetailsScreen({ route, navigation }) {
             size={60}
             title="Mental Health"
             onPress={() => {
-              if (patient?.age > 10) {
+              if (patient?.age > 9) {
                 navigation.navigate("mhDetails", { screen: "NewMH" });
               } else {
                 Alert.alert(
                   "Minimum Age Restriction",
-                  "Client below age (10 years) allowed for screening"
+                  "Client below age (10 years) not allowed for screening"
                 );
               }
             }}
@@ -125,18 +125,10 @@ function PatientDetailsScreen({ route, navigation }) {
             title="TB Screening"
             size={60}
             onPress={() => {
-              //if (patient?.age > 10) {
               navigation.navigate("tbDetails", { screen: "NewTB" });
-              // } else {
-              //   Alert.alert(
-              //     "Minimum Age Restriction",
-              //     "Client below age (10 years) allowed for screening"
-              //   );
-              // }
             }}
           >
             <View style={styles.labelContainer}>
-              {/* <Text style={{ color: "white" }}>TB/TPT</Text> */}
               <FIcon name="head-side-cough" style={styles.actionButtonIcon} />
             </View>
           </ActionButton.Item>

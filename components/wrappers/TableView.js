@@ -4,12 +4,12 @@ import {
   Text,
   TouchableOpacity,
   View,
-  Share,
-  Linking,
+  PermissionsAndroid,
+  ScrollView,
 } from "react-native";
 import { Col, Row, Grid } from "react-native-easy-grid";
-import React, { useState } from "react";
-import { Divider, Title } from "react-native-paper";
+import React, { useEffect, useState } from "react";
+import { Divider } from "react-native-paper";
 import FontAwesome from "react-native-vector-icons/FontAwesome";
 import FontAwesome5 from "react-native-vector-icons/FontAwesome5";
 import AppPicker from "./AppPicker";
@@ -18,7 +18,10 @@ import AppText from "./AppText";
 import XLSX from "xlsx";
 import * as FileSystem from "expo-file-system";
 import * as Sharing from "expo-sharing";
+import AppTextInput from "./AppTextInput";
 // import RNFS from "react-native-fs";
+// import RNFetchBlob from "react-native-fetch-blob";
+// var RNFetchBlob = require("react-native-fetch-blob").default;
 
 export default function TableView({
   title = "Data Table",
@@ -41,12 +44,23 @@ export default function TableView({
   setFetching,
   setProgress,
   exportable,
+  fontSize = 12,
+  property = "indicator",
 }) {
-  const filename = `/ExportedStats-${new Date().toISOString().slice(0, 10)}-${
-    new Date().getHours
-  }-${new Date().getMinutes()}-${new Date().getSeconds()}-.xlsx`;
+  const [formattedData, setFormattedData] = useState(data);
+  // const filename = `/ExportedStats-${new Date().toISOString().slice(0, 10)}-${
+  //   new Date().getHours
+  // }-${new Date().getMinutes()}-${new Date().getSeconds()}-.xlsx`;
+
+  useEffect(() => {
+    setFormattedData(data);
+  }, [data]);
+
   const createAndSaveCSV = async () => {
     try {
+      let isPermitedExternalStorage = await PermissionsAndroid.check(
+        PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE
+      );
       var ws = XLSX.utils.json_to_sheet(data);
       var wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Cities");
@@ -56,7 +70,7 @@ export default function TableView({
       });
 
       const uri = FileSystem.cacheDirectory + ".xlsx";
-      //console.log(`Writing to ${JSON.stringify(uri)} with text: ${wbout}`);
+      console.log(`Writing to ${JSON.stringify(uri)} with text: ${wbout}`);
       await FileSystem.writeAsStringAsync(uri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
@@ -69,40 +83,77 @@ export default function TableView({
       } else {
         Alert.alert("Feature  Found", "Expo Sharing  available in this app!");
       }
-      await Sharing.shareAsync(uri, {
+      await Sharing.shareAsync(`file`, {
         mimeType:
           "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         dialogTitle: "MyWater data",
         UTI: "com.microsoft.excel.xlsx",
       });
-
-      // Write generated excel to Storage
-      // RNFS.writeFile(RNFS.ExternalStorageDirectoryPath + filename, wbout, "ascii")
-      //   .then((r) => {
-      //     console.log("Success");
-      //   })
-      //   .catch((e) => {
-      //     console.log("Error", e);
-      //   });
     } catch (error) {
       console.log(error);
       Alert.alert("Download Error", String(error));
     }
   };
 
-  //console.log(data);
-  const formattedData = itemsPerPage
-    ? data
-      ? data?.slice(itemsPerPage * page, itemsPerPage * (page + 1))
-      : []
-    : data
-    ? data
-    : [];
+  useEffect(() => {
+    setFormattedData(
+      itemsPerPage
+        ? data
+          ? data?.slice(itemsPerPage * page, itemsPerPage * (page + 1))
+          : []
+        : data
+        ? data
+        : []
+    );
+  }, [page, itemsPerPage]);
 
   return (
-    <View>
-      <View style={{ alignItems: "center", paddingBottom: 10 }}>
-        <AppText style={{ color: titleColor }}>{title}</AppText>
+    <ScrollView>
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "flex-start",
+          paddingBottom: 10,
+          alignItems: "center",
+          width: "100%",
+          backgroundColor: Colors.medium,
+        }}
+      >
+        <AppText
+          style={{
+            color: titleColor,
+            paddingHorizontal: 10,
+            paddingVertical: 0,
+            fontSize: 14,
+          }}
+        >
+          {title}
+        </AppText>
+        <View>
+          <AppTextInput
+            stylez={{
+              width: 200,
+              backgroundColor: "transparent",
+              borderBottomWidth: 1,
+              borderColor: Colors.secondary,
+              fontSize: 10,
+            }}
+            placeholder="search name"
+            onChangeText={(value) =>
+              setFormattedData(
+                data?.filter((p) =>
+                  property === "indicator"
+                    ? p?.pname?.toLowerCase()?.includes(value.toLowerCase())
+                    : p?.firstName
+                        ?.toLowerCase()
+                        ?.includes(value.toLowerCase()) ||
+                      p?.lastName?.toLowerCase()?.includes(value.toLowerCase())
+                )
+              )
+            }
+            icon={"search"}
+          />
+        </View>
       </View>
       <Grid>
         <Row>
@@ -116,7 +167,7 @@ export default function TableView({
                   paddingHorizontal: padding ? "0.5%" : 0,
                 }}
               >
-                <Title
+                <Text
                   style={{
                     backgroundColor: highlightColumns
                       ? index % 2 === 1
@@ -125,11 +176,12 @@ export default function TableView({
                       : "#ddd",
                     color: headerColor,
                     alignItems: alignColumns,
+                    flexWrap: "wrap",
                   }}
                   textBreakStrategy={"balanced"}
                 >
                   {h.title}
-                </Title>
+                </Text>
               </Col>
             );
           })}
@@ -154,6 +206,7 @@ export default function TableView({
                       : "#fff"
                     : "white",
                   color: headerColor,
+                  height: 28,
                 }}
                 key={i}
               >
@@ -162,7 +215,7 @@ export default function TableView({
                     <Col
                       key={index}
                       style={{
-                        width: headers[index].size,
+                        width: headers[index]?.size,
                         color: headerColor,
                         alignItems:
                           index == 0 ? alignFirstColumn : alignColumns,
@@ -171,15 +224,23 @@ export default function TableView({
                     >
                       <Text
                         style={{
-                          paddingHorizontal: 2,
+                          paddingHorizontal:
+                            item[headers[index]?.field]?.padding,
                           color: firstColumnColor
                             ? index === 0
                               ? firstColumnColor
                               : "black"
                             : "black",
+                          flexWrap: "wrap",
+                          flexShrink: 1,
+                          fontSize: fontSize,
+                          paddingVertical: 5,
+                          textTransform: "lowercase",
                         }}
+                        textBreakStrategy="balanced"
                       >
-                        {item[headers[index].field]}
+                        {/* {console.log(item[headers[index]?.field])} */}
+                        {item[headers[index]?.field]}
                       </Text>
                     </Col>
                   );
@@ -204,6 +265,7 @@ export default function TableView({
             onValueChange={(pageSize) => {
               setPage(0);
               setItemsPerPage(pageSize);
+              setItemsPerPage(pageSize);
             }}
             value={itemsPerPage}
             style={{
@@ -225,7 +287,9 @@ export default function TableView({
 
           <TouchableOpacity
             onPress={() => {
-              page >= 1 ? setPage(--page) : null;
+              if (page >= 1) {
+                setPage(--page);
+              }
             }}
             style={{ backgroundColor: "#eee" }}
           >
@@ -238,9 +302,9 @@ export default function TableView({
           </TouchableOpacity>
           <TouchableOpacity
             onPress={() => {
-              Math.floor(data?.length / itemsPerPage) > page
-                ? setPage(++page)
-                : null;
+              if (Math.floor(data?.length / itemsPerPage) > page) {
+                setPage(++page);
+              }
             }}
             style={{ backgroundColor: "#eee" }}
           >
@@ -269,7 +333,7 @@ export default function TableView({
       <Divider
         style={{ marginTop: 0, borderColor: Colors.primary, borderWidth: 1 }}
       />
-    </View>
+    </ScrollView>
   );
 }
 
@@ -278,7 +342,7 @@ const styles = StyleSheet.create({
     paddingTop: 2,
     width: "100%",
     flexDirection: "row",
-    justifyContent: "center",
+    justifyContent: "flex-start",
     alignItems: "center",
   },
 });

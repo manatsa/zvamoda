@@ -3,8 +3,6 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 import DatePicker from "react-native-date-picker";
 import { Alert, Button, Text, View } from "react-native";
 
-// const DatePicker = require("react-native-date-picker");
-
 const DatePickerExample = () => {
   const [date, setDate] = useState(new Date());
   const [open, setOpen] = useState(false);

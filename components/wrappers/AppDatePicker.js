@@ -56,6 +56,7 @@ export default function AppDatePicker({ name, label, placeholder, color }) {
         <DatePicker
           modal
           cancelText="Close"
+          androidVariant="nativeAndroid"
           open={visible}
           date={values[name] || new Date()}
           mode={"date"}
@@ -63,18 +64,9 @@ export default function AppDatePicker({ name, label, placeholder, color }) {
             onChange(date);
           }}
           onCancel={() => {
-            setOpen(false);
+            setVisible(false);
           }}
         />
-        {/* {visible && (
-          <DateTimePicker
-            value={values[name] || new Date()}
-            mode={"datetime"}
-            onChange={onChange}
-            dateFormat="shortdate"
-            display="default"
-          />
-        )} */}
       </View>
       <AppErrorMessage message={errors[name]} visible={touched[name]} />
     </View>

@@ -10,7 +10,7 @@ const LoginToApi = async (user, segment) => {
       headers: {
         "Content-Type": "application/json",
       },
-      timeout: 30000,
+      timeout: 60000,
       timeoutErrorMessage:
         "Connection to server could not be established!\nPlease check your internet connectivity.",
     })

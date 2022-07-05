@@ -30,7 +30,7 @@ function LoginComponent({ navigation }) {
 
       const token = response?.data;
 
-      if (!token || token.length === 0) {
+      if (!token || token?.length === 0) {
         return;
       }
       await AsyncStorage.setItem(StorageKeys.tokenKey, token);

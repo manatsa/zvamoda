@@ -1,2 +1,2 @@
-export default "https://db.zvandiri.org:8443/mobile";
-//export default "http://192.168.86.98:9000/mobile";
+export default "https://db.zvandiri.org:8443/mobile2";
+//export default "http://10.10.10.62:8090/mobile";

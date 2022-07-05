@@ -120,7 +120,7 @@ export default function TBScreeningListScreen() {
                       "TB Screenings synchronization was successful!"
                     );
                   } else if (code < 0) {
-                    Alert.alert("No referrals to synchronize!");
+                    Alert.alert("No TB Screening Items to synchronize!");
                   } else {
                     Alert.alert("TB Screenings synchronization failed!");
                   }

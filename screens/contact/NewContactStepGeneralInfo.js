@@ -43,7 +43,9 @@ export default function NewContactStepGeneralInfo({
     getData();
   }, []);
 
-  initValues.careLevel = String(patient?.enhancedStatus);
+  initValues.careLevel = patient?.enhancedStatus
+    ? String(patient?.enhancedStatus)
+    : "";
 
   const filteredLocations = locations.map((loc) => {
     const ls = { label: loc.name, value: loc.id };

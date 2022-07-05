@@ -12,10 +12,7 @@ export default [
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each."
       )
       .label("SCREENING DATE")
-      .when(["screenedForTb", "identifiedWithTb"], {
-        is: (val, identified) => val === "0" && identified === "0",
-        then: yup.date().required("Please specify screening date."),
-      })
+      .required("Please specify screening date.")
       .test(
         "is-valid-year",
         "Invalid date, mus be: yyyy-mm-dd. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each.",

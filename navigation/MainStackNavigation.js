@@ -21,7 +21,9 @@ import {
   HelperText,
   IconButton,
   List,
+  Modal,
   Portal,
+  Provider,
   Text,
 } from "react-native-paper";
 import AppText from "../components/wrappers/AppText";
@@ -42,24 +44,145 @@ import NewBugReport from "../screens/chats/NewBugReport";
 import * as RootNavigation from "./RootNavigation";
 import NewFeatureRequest from "../screens/chats/NewFeatureRequest";
 import FacilityManagement from "../screens/management/FacilityManagement";
+import PatientLineItems from "./../screens/management/PatientLineItems";
+import FacilityLineItems from "./../screens/management/FacilityLineItems";
+import DistrictLineItems from "./../screens/management/DistrictLineItems";
+import AppFlipYScrollViewScreen from "../components/animatedContainers/AppFlipYScrollViewScreen";
+import { AppForm } from "../components/form";
+import AppDatePicker from "../components/wrappers/AppDatePicker";
+import AppFormLoadingSubmit from "../components/form/AppFormLoadingSubmit";
+import * as yup from "yup";
+import GetFromApi from "../api/GetAxiosClient";
 
 const Stack = createNativeStackNavigator();
+
+const statsInitValues = {
+  start: new Date(),
+  end: new Date(),
+};
+
+const statsValidationSchema = yup.object().shape({
+  start: yup
+    .date()
+    .typeError(
+      "Invalid date. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each"
+    )
+    .required("Start date cannot be empty!"),
+  end: yup
+    .date()
+    .typeError(
+      "Invalid date. Make sure: \n1. year has 4 numbers\n2. month and day have 2 characters each"
+    )
+    .required("End date cannot be empty!"),
+});
 
 function MainStackNavigation() {
   const [show, setShow] = useState(false);
   const [syncText, setSyncText] = useState(" Sync in progress...");
   const [visible, setVisible] = useState(false);
   const [showMgt, setShowMgt] = useState(false);
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState([]);
   const [facilities, setFacilities] = useState([]);
+  const [showDates, setShowDates] = useState(false);
+  const [isFeching, setIsFetching] = useState(false);
+  const [facility, setFacility] = useState(null);
+  const [token, setToken] = useState(null);
+  const [patients, setPatients] = useState([]);
 
-  useEffect(async () => {
+  const getData = async () => {
+    const token = await AsyncStorage.getItem(StorageKeys.tokenKey);
+    setToken(token);
     const uFacility = await AsyncStorage.getItem(StorageKeys.facilitiesKey);
-    setFacilities(JSON.parse(uFacility));
-  });
+    const facs = JSON.parse(uFacility);
+    console.log(facilities);
+    setFacilities(facs);
+    setFacilities(facs);
+    const uString = await AsyncStorage.getItem(StorageKeys.userKey);
+    const use = JSON.parse(uString);
+    setUser(use);
+    const dString = await AsyncStorage.getItem(StorageKeys.patientListKey);
+    setPatients(JSON.parse(dString));
+  };
+
+  useEffect(() => {
+    getData();
+  }, []);
+
+  const onSubmit = async (values) => {
+    //console.log(patients[0]);
+    setIsFetching(true);
+    const { start, end } = values;
+    const startFinal = new Date(String(start))?.toISOString()?.slice(0, 10);
+    const endFinal = new Date(String(end))?.toISOString()?.slice(0, 10);
+
+    try {
+      if (facility && facility !== "") {
+        const segment = `/patient/get-patient-stats/?facility=${facility}&start=${startFinal}&end=${endFinal}`;
+        const facilityData = await GetFromApi(token, segment).catch((error) => {
+          Alert.alert("ERROR FECTHING DATA", error.toJSON().message);
+        });
+        setShowDates(false);
+        setIsFetching(false);
+
+        RootNavigation.navigate("facilityLineItems", {
+          data: facilityData?.data,
+          title:
+            facility === "ALL"
+              ? patients[0]?.district
+              : facilities.find((d) => d.id === facility)?.name,
+        });
+      }
+    } finally {
+      setIsFetching(false);
+    }
+  };
 
   return (
     <>
+      <Portal>
+        <Modal
+          visible={showDates}
+          dismissable={true}
+          contentContainerStyle={[
+            {
+              borderWidth: 5,
+              borderColor: Colors.secondary,
+              elevation: 30,
+              flex: 1,
+              height: 500,
+              padding: 20,
+              backgroundColor: Colors.smokygrey,
+            },
+          ]}
+          onDismiss={() => setShowDates(false)}
+        >
+          <AppFlipYScrollViewScreen duration={500}>
+            <AppText
+              style={{
+                color: Colors.bluish,
+                textDecorationLine: "underline",
+              }}
+            >
+              Dates For Line Items
+            </AppText>
+            <Divider />
+            <AppForm
+              initialValues={statsInitValues}
+              validationSchema={statsValidationSchema}
+              onSubmit={onSubmit}
+            >
+              <AppDatePicker name={"start"} label={"Start Date"} />
+              <AppDatePicker name={"end"} label={"End Date"} />
+              <AppFormLoadingSubmit
+                title={"Fetch Line Items"}
+                isLoading={isFeching}
+                color={Colors.greenish}
+                loadingLabel={"Fetching data... wait"}
+              />
+            </AppForm>
+          </AppFlipYScrollViewScreen>
+        </Modal>
+      </Portal>
       <Portal>
         <Dialog
           visible={visible}
@@ -67,7 +190,7 @@ function MainStackNavigation() {
           style={styles.dialog}
         >
           <Dialog.Content>
-            <Text style={styles.dialogHeader}>Zvamoda Mobile App v.1.0.3</Text>
+            <Text style={styles.dialogHeader}>Zvamoda v2.0.0</Text>
             <List.Item
               onPress={() => {
                 setVisible(false);
@@ -129,9 +252,9 @@ function MainStackNavigation() {
             <HelperText style={styles.releaseDetails}>
               Release Date: 01 May 2022
             </HelperText>
-            <HelperText
+            {/* <HelperText
               style={styles.copyright}
-            >{`\u00A9 Africaid 2022`}</HelperText>
+            >{`\u00A9 Africaid 2022`}</HelperText> */}
           </Dialog.Content>
         </Dialog>
         <Dialog
@@ -148,6 +271,11 @@ function MainStackNavigation() {
                   facility: "",
                   title: "All Facilities",
                 });
+              }}
+              onLongPress={() => {
+                setShowMgt(false);
+                setFacility("ALL");
+                setShowDates(true);
               }}
               title={"All facilities"}
               titleStyle={styles.title}
@@ -172,7 +300,11 @@ function MainStackNavigation() {
                       });
                     }}
                     key={f.id}
-                    onLongPress={() => {}}
+                    onLongPress={() => {
+                      setFacility(f.id);
+                      setShowMgt(false);
+                      setShowDates(true);
+                    }}
                     title={f.name}
                     titleStyle={styles.title}
                     left={(props) => (
@@ -226,6 +358,10 @@ function MainStackNavigation() {
                       );
 
                       if (user?.userLevel === "DISTRICT") {
+                        const facilities = await AsyncStorage.getItem(
+                          StorageKeys.facilitiesKey
+                        );
+                        setFacilities(JSON.parse(facilities));
                         setShowMgt(true);
                       } else {
                         console.log(
@@ -246,10 +382,6 @@ function MainStackNavigation() {
                       const connectivity = await AppNetworkInfo();
                       const { isConnected, isInternetReachable } = connectivity;
                       if (isConnected && !isInternetReachable) {
-                        // Alert.alert(
-                        //   "Network Status",
-                        //   "You're  connected but internet accessibility cannot be guaranteed!."
-                        // );
                         toast.show(
                           "You're  connected but internet accessibility cannot be guaranteed!.",
                           {
@@ -260,6 +392,30 @@ function MainStackNavigation() {
                             placement: "bottom",
                           }
                         );
+
+                        try {
+                          const user = await AsyncStorage.getItem(
+                            StorageKeys.currentUserKey
+                          );
+                          if (user) {
+                            const code = await SynchronizeEntries(setSyncText);
+                            if (code === 200) {
+                              Alert.alert(
+                                "Synchronization Status",
+                                "Global Synchronization was successful!"
+                              );
+                            } else {
+                              Alert.alert(
+                                "Synchronization Status",
+                                "Global Synchronization finished with errors! \n Check the summary to see what has failed to synchronize."
+                              );
+                            }
+                          } else {
+                            Alert.alert("Login Status", "Please login first!");
+                          }
+                        } finally {
+                          setShow(false);
+                        }
                       }
                       if (isConnected) {
                         try {
@@ -453,6 +609,30 @@ function MainStackNavigation() {
           <Stack.Screen
             name="facilityManagement"
             component={FacilityManagement}
+            options={({ route }) => ({
+              title: route?.params?.title,
+              animation: "slide_from_bottom",
+            })}
+          />
+          <Stack.Screen
+            name="patientLineItems"
+            component={PatientLineItems}
+            options={({ route }) => ({
+              title: route?.params?.title,
+              animation: "slide_from_bottom",
+            })}
+          />
+          <Stack.Screen
+            name="facilityLineItems"
+            component={FacilityLineItems}
+            options={({ route }) => ({
+              title: route?.params?.title,
+              animation: "slide_from_bottom",
+            })}
+          />
+          <Stack.Screen
+            name="districttLineItems"
+            component={DistrictLineItems}
             options={({ route }) => ({
               title: route?.params?.title,
               animation: "slide_from_bottom",
