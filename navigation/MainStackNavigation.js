@@ -94,7 +94,7 @@ function MainStackNavigation() {
     setToken(token);
     const uFacility = await AsyncStorage.getItem(StorageKeys.facilitiesKey);
     const facs = JSON.parse(uFacility);
-    console.log(facilities);
+    // console.log(facilities);
     setFacilities(facs);
     setFacilities(facs);
     const uString = await AsyncStorage.getItem(StorageKeys.userKey);
@@ -117,6 +117,11 @@ function MainStackNavigation() {
 
     try {
       if (facility && facility !== "") {
+        // if (!token || token == "") {
+        //   const tok = await AsyncStorage.getItem(StorageKeys.tokenKey);
+        //   setToken(tok);
+        // }
+
         const segment = `/patient/get-patient-stats/?facility=${facility}&start=${startFinal}&end=${endFinal}`;
         const facilityData = await GetFromApi(token, segment).catch((error) => {
           Alert.alert("ERROR FECTHING DATA", error.toJSON().message);
